@@ -3,4 +3,7 @@ from django.http import HttpResponse
 
 # Create your views here.
 def index(request):
-	return render(request, 'layout/base.html')
+	return render(request, 'users/usersList.html')
+
+def staff_list(request):
+	return render(request, 'staff/staffList.html')
