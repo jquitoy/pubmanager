@@ -25,11 +25,16 @@
     </button>
     <div class="flex min-h-screen bg-white dark:bg-gray-950">
         {% include "include/sidebar.html" %}
-        <div class="flex-1">
+        <div class="flex-1 mx-8">
             <br><br>
             {% block 'content' %}{% endblock 'content' %}
         </div>
     </div>
+
+
+
+
+
     <script>
     // Sidebar toggle logic
     const sidebar = document.getElementById('sidebar');

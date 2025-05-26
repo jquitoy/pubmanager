@@ -6,7 +6,7 @@ class Roles(models.Model):
   class Meta:
     db_table = 'tbl_roles'
 
-  staff_id = models.BigAutoField(primary_key=True, blank=False)
+  role_id = models.BigAutoField(primary_key=True, blank=False)
   role = models.CharField(max_length=55, blank=False)
 
 class Staffs(models.Model):
