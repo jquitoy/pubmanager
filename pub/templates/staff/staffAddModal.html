@@ -1,20 +1,6 @@
-{% extends "layout/base.html" %}
-
-{% block 'content' %}
-
-<dialog id="my_modal_2" class="modal">
-  <div class="modal-box">
-    <h3 class="text-lg font-bold">Hello!</h3>
-    <p class="py-4">Press ESC key or click outside to close</p>
-  </div>
-  <form method="dialog" class="modal-backdrop">
-    <button>close</button>
-  </form>
-</dialog>
-
 <dialog id="add_staff_modal" class="modal">
     <div class="modal-box">
-        <h2 class="text-2xl font-bold mb-6 text-center">Add Staff</h2>
+        <h2 class="text-2xl font-bold mb-6 text-center">Delete Staff</h2>
         <form method="post">
         {% csrf_token %}
         <div class="form-control mb-4">
@@ -39,12 +25,12 @@
             <label for="role" class="label">
                 <span class="label-text font-semibold">Role(s)</span>
             </label>
-            <select name="role[]" id="role" class="select select-bordered w-full" multiple required>
+            <select name="role[]" id="role" multiple required>
                 {% for role in roles %}
                     <option value="{{ role.role_id }}">{{ role.role }}</option>
                 {% endfor %}
             </select>
-            <span class="text-xs text-gray-500">Hold Ctrl (Windows) or Cmd (Mac) to select multiple roles.</span>
+            <span class="text-xs text-gray-500"></span>
         </div>
         <div class="form-control mb-4">
             <label for="google_calendar_id" class="label">
@@ -57,9 +43,8 @@
         </div>
         </form>
     </div>
-    </div>
     <form method="dialog" class="modal-backdrop">
         <button>close</button>
-    </form> 
+    </form>
+
 </dialog>
-{% endblock 'content' %}

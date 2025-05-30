@@ -1,0 +1,74 @@
+.multi-select-tag {
+  background: var(--color-base-100);
+  color: var(--color-base-content);
+  border: 1px solid var(--color-base-300);
+  border-radius: 0.5rem;
+}
+.multi-select-tag .wrapper {
+    position: relative;
+}
+.multi-select-tag .tag-container {
+    display: flex;
+    padding: 0.5rem 0.5rem 0 0.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    border: none;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    background-color: transparent;
+}
+.multi-select-tag .tag-input {
+    padding: 0.25rem 0;
+    flex-grow: 1;
+    outline: none;
+    border: none;
+    background-color: transparent;
+    margin: 0;
+    line-height: 1.25rem;
+    color: var(--color-base-content);
+}
+.multi-select-tag .dropdown {
+    overflow: auto;
+    position: absolute;
+    z-index: 10;
+    padding: 0px;
+    margin-top: 0.25rem;
+    border-radius: 0.25rem;
+    border: 1px solid var(--color-base-300);
+    width: 100%;
+    max-height: 15rem;
+    background-color: var(--color-base-100);
+    color: var(--color-base-content);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+.multi-select-tag .li {
+    padding: 0.5rem;
+    cursor: pointer;
+    list-style-type: none;
+    color: var(--color-base-content);
+}
+.multi-select-tag .li:hover {
+    background-color: var(--color-base-200);
+}
+.multi-select-tag .li-arrow {
+   background-color: var(--color-base-300);
+}
+.multi-select-tag .tag-item {
+    display: flex;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    align-items: center;
+    border-radius: 0.25rem;
+    color: var(--color-primary-content);
+    background-color: var(--color-primary);
+}
+.multi-select-tag .cross {
+    margin-left: 0.25rem;
+    cursor: pointer;
+}
+.multi-select-tag .hidden {
+    display: none;
+}

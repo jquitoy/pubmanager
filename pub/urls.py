@@ -2,9 +2,13 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-	path('index/', views.index, name='index'),
+	path('', views.staff_list, name='staff_list'),
+	
 	path('staff/list/', views.staff_list, name='staff_list'),
 	path('staff/add/', views.staff_add, name='staff_add'),
+	path('staff/edit/<int:staffId>/', views.staff_edit, name='staff_edit'),
+	path('staff/delete/<int:staffId>/', views.staff_delete, name='staff_delete'),
+
 
 
 	path('roles/list', views.role_list, name='role_list'),

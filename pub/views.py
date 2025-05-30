@@ -1,5 +1,5 @@
 import json
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_GET
 from .forms import RoleForm, StaffForm, TaskWithAssignmentForm
@@ -12,10 +12,32 @@ def index(request):
 
 def staff_list(request):
     staffs = Staffs.objects.all()
+    roles = Roles.objects.all()
 
     data = {
-        'staffs': staffs
+        'staffs': staffs,
+        'roles': roles,  # Add this line
     }
+
+    if request.method == 'POST':
+        fullName = request.POST.get('full_name')
+        position = request.POST.get('position')
+        email = request.POST.get('email')
+        roles_selected = request.POST.getlist('role[]')
+
+        staff = Staffs.objects.create(
+            full_name = fullName,
+            position = position,
+            email = email,
+        )
+        # Assuming Staffs has a ManyToManyField to Roles named 'role'
+        staff.role.set(roles_selected)
+        staff.save()
+
+        return render(request, 'staff/staffList.html', data)
+
+
+        
 
     return render(request, 'staff/staffList.html', data)
 
@@ -28,6 +50,71 @@ def staff_add(request):
     else:
         form = StaffForm()
     return render(request, 'staff/staffAdd.html', {'form': form})
+
+def staff_edit(request, staffId):
+    try:
+        if request.method == 'POST':
+            staffObj = Staffs.objects.get(pk=staffId)
+
+            fullName = request.POST.get('full_name')
+            position = request.POST.get('position')
+            email = request.POST.get('email')
+            roles_selected = request.POST.getlist('role[]')
+
+            form_data = {
+                'fullName': fullName,
+                'position': position,
+                'email': email,
+                'roles_selected': roles_selected
+            }
+
+            # Update staff if validation passes
+            staffObj.full_name = fullName
+            staffObj.position = position
+            staffObj.email = email
+            staffObj.role.set(roles_selected)
+            staffObj.save()
+
+            return redirect('/staff/list')
+
+        else:
+            staffObj = Staffs.objects.get(pk=staffId)
+            roles = Roles.objects.all()
+
+            data = {
+                'staff': staffObj,
+                'roles': roles
+            }
+
+            return render(request, 'staff/staffEdit.html', data)
+
+    except Exception as e:
+        return HttpResponse(f'Error occured during edit staff: {e}')
+    
+def staff_delete(request, staffId):
+
+    try:
+        if request.method == 'POST':
+            staffObj = Staffs.objects.get(pk=staffId)
+            staffObj.delete()
+
+            return redirect('/staff/list')
+
+        else:
+            staffObj = Staffs.objects.get(pk=staffId)
+            roles = Roles.objects.all()
+
+            data = {
+                'staff': staffObj,
+                'roles': roles
+            }
+
+            return render(request, 'staff/deleteStaff.html', data)
+
+
+    
+    except Exception as e:
+        return HttpResponse(f'Error occured during delete gender: {e}')
 
 def role_list(request):
     try:
@@ -85,35 +172,6 @@ def load_staffs(request):
     return render(request, 'staff/staffOptions.html', {'staffs': staffs})
 
 
-# def task_add(request):
-#     roles = Roles.objects.all()
-
-
-#     data = {
-#         'roles':roles,
-
-#     }
-
-#     return render(request, 'task/taskAdds.html', data)
-
-
-
-def form_valid(self, form):
-    task = form.save(commit=False)
-    task.created_by = self.request.user
-    task.save()
-    
-    # Process selected staff
-    try:
-        selected_staff = json.loads(form.cleaned_data['selected_staff'] or '[]')
-        for staff_data in selected_staff:
-            Assignments.objects.create(
-                task=task,
-                staff_id=staff_data['id'],
-                role=form.cleaned_data['role'],
-                status='ACCEPTED' if task.task_type == Tasks.OBSERVANCE else 'PENDING'
-            )
-    except json.JSONDecodeError:
-        pass
-    
-    return super().form_valid(form)
+def get_staff_form(request, staff_id):
+    staff = get_object_or_404(Staffs, id=staff_id)
+    return render(request, 'staff/staffList.html', {'staff': staff})
