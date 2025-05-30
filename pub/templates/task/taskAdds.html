@@ -1,0 +1,59 @@
+{% extends 'layout/base.html' %}
+{% load static %}
+
+{% block 'content' %}
+<div class="container mx-auto max-w-lg mt-8">
+  <div class="card bg-base-100 shadow-xl p-8">
+    <h2 class="text-2xl font-bold mb-6 text-center">Add Task</h2>
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-control mb-4">
+        <label for="title" class="label">
+          <span class="label-text font-semibold">Title</span>
+        </label>
+        <input type="text" class="input input-bordered" id="title" name="title" required>
+      </div>
+      <div class="form-control mb-4">
+        <label for="type" class="label">
+          <span class="label-text font-semibold">Type</span>
+        </label>
+        <input type="text" class="input input-bordered" id="type" name="type" required>
+      </div>
+      <div class="form-control mb-4">
+        <label for="deadline" class="label">
+          <span class="label-text font-semibold">Deadline</span>
+        </label>
+        <input type="date" class="input input-bordered" id="deadline" name="deadline" required>
+      </div>
+      <div class="form-control mb-4">
+        <label for="description" class="label">
+          <span class="label-text font-semibold">Description</span>
+        </label>
+        <textarea class="textarea textarea-bordered" id="description" name="description" rows="3" required></textarea>
+      </div>
+      <div class="divider my-6">Assign Staff</div>
+      <div class="form-control mb-4">
+        <label for="role" class="label">
+          <span class="label-text font-semibold">Role</span>
+        </label>
+        <select class="select select-bordered" id="role" name="role" required>
+          <option value="">Select Role</option>
+          {% for role in roles %}
+            <option value="{{ role.id }}"> {{role.role}}</option>  
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-control mb-6">
+        <label for="staff" class="label">
+          <span class="label-text font-semibold">Staff</span>
+        </label>
+        <select class="select select-bordered" id="staff" name="staff" required>
+          <option value="">Select Staff</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary w-full">Add Task</button>
+    </form>
+  </div>
+</div>
+
+{% endblock 'content' %}

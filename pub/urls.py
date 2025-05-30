@@ -12,6 +12,7 @@ urlpatterns = [
 
 
 	path('task/add', views.task_add, name='task_add'),
+	path('load_staffs/', views.load_staffs, name="load_staffs"),
 
 
 ]

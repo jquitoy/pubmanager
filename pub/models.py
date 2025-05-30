@@ -26,3 +26,48 @@ class Staffs(models.Model):
  
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
+
+class Tasks(models.Model):
+  class Meta:
+    db_table = 'tbl_tasks'
+
+  OBSERVANCE = 'OBS'
+  COVERAGE = 'COV'
+  TASK_TYPE_CHOICES = [
+      (OBSERVANCE, 'Observance (Mandatory)'),
+      (COVERAGE, 'Coverage (Optional)'),
+  ]
+  
+  title = models.CharField(max_length=200)  # "Valentine’s Day Post"
+  task_type = models.CharField(max_length=3, choices=TASK_TYPE_CHOICES)  # OBS/COV
+  deadline = models.DateField()  # February 14, 5:00 PM
+  description = models.TextField(blank=True)  # Optional details
+  created_at = models.DateTimeField(auto_now_add=True)
+  status = models.CharField(  # Overall task status
+      max_length=20,
+      choices=[('POSTED', 'Posted'), ('MISSED', 'Missed'), ('CANCELLED', 'Cancelled'), ('WORKING', 'Working')],
+      default='WORKING'
+  )
+
+
+class Assignments(models.Model):
+    class Meta:
+      db_table = 'tbl_assignments'
+    task = models.ForeignKey(Tasks, on_delete=models.CASCADE)  # Links to the parent Task
+    staff = models.ForeignKey(Staffs, on_delete=models.CASCADE)  # Assigned staff member
+    role = models.CharField(max_length=50)  # "WRITER", "DESIGNER" (from Staff.role)
+    
+    # Status (for staff progress)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('PENDING', 'Pending'),       # Assigned but not started
+            ('ACCEPTED', 'Accepted'),     # Staff confirmed (for COVERAGE tasks)
+            ('DECLINED', 'Declined'),     # Staff refused (for COVERAGE tasks)
+            ('SUBMITTED', 'Submitted'),   # Work delivered
+            ('MISSED', 'Missed Deadline'), 
+        ],
+        default='PENDING'
+    )
+  
+    notes = models.TextField(blank=True)  # Feedback from admin

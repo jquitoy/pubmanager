@@ -6,6 +6,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{% static "/css/output.css" %}">
+    <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
+
     <title>Document</title>
     <script>
     // On page load or when changing themes, best to add inline in `head` to avoid FOUC
@@ -23,17 +25,12 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
         </svg>
     </button>
-    <div class="flex min-h-screen bg-white dark:bg-gray-950">
+    <div class="flex min-h-screen">
         {% include "include/sidebar.html" %}
-        <div class="flex-1 mx-8">
-            <br><br>
+        <div class="flex-1 bg-white dark:bg-gray-950 md:ml-64 p-4">
             {% block 'content' %}{% endblock 'content' %}
         </div>
     </div>
-
-
-
-
 
     <script>
     // Sidebar toggle logic
