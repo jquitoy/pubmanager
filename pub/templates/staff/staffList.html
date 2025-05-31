@@ -2,16 +2,18 @@
 {% load static %}
 
 {% block 'content' %}
-<div class="flex justify-center items-center min-h-screen">
-<section class="container px-8">
-    <div class="flex items-center gap-x-3">
-        <h2 class="text-lg font-medium ">Team members</h2>
-
-        <span class="px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded-full dark:bg-gray-800 dark:text-blue-400">100 users</span>
+<section class="mt-25 container px-8">
+    <!-- Header Section -->
+    <div class="flex justify-between items-center mb-6">
+        <div class="flex items-center gap-x-3">
+            <h2 class="text-3xl font-extrabold">Staff Members</h2>
+            <span class="px-3 py-1 text-xs badge badge-primary">{{ staffs.count }} members</span>
+        </div>
         <button class="btn btn-outline btn-primary" onclick="add_staff_modal.showModal()">Add Staff</button>
     </div>
 
-    <div class="flex flex-col mt-6">
+    <!-- Table Section -->
+    <div class="flex flex-col">
         <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
             <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
                 <div class="overflow-hidden border border-base-300 dark:border-gray-700 md:rounded-lg">
@@ -47,21 +49,23 @@
 
                             <td>
                               <div class="flex gap-2">
-                                <!-- Edit Button with Pencil SVG -->
-                                 <a href="/staff/edit/{{staff.staff_id}}">
-                                  <button class="btn btn-xs btn-ghost p-1 group">
-                                    
+                                <!-- Edit Button -->
+                                <button class="btn btn-xs btn-ghost p-1 group"
+                                    hx-get="/staff/edit/{{ staff.staff_id }}/"
+                                    hx-target="#edit-staff-modal-content"
+                                    hx-swap="innerHTML"
+                                    hx-trigger="click"
+                                    title="Edit">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400 group-hover:text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-1.414.586H7v-3a2 2 0 01.586-1.414z" />
                                     </svg>
                                   </button>
-                                </a>
-                                <!-- Delete Button with Trash SVG -->
+                                <!-- Delete Button -->
                                 <button class="btn btn-xs btn-ghost p-1" 
                                 onclick="openDeleteModal('{{ staff.staff_id }}', '{{ staff.full_name|escapejs }}')" 
-                                group title="Delete">
-                                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400 group-hover:text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                title="Delete">
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400 group-hover:text-error hover:text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M6 18L18 6M6 6l12 12" />
                                   </svg>
@@ -80,16 +84,12 @@
     </div>
 
     {% comment %} pagination {% endcomment %}
-
     <div class="flex items-center justify-between mt-6">
         <a href="#" class="flex items-center px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 rtl:-scale-x-100">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 15.75L3 12m0 0l3.75-3.75M3 12h18" />
             </svg>
-
-            <span>
-                previous
-            </span>
+            <span>Previous</span>
         </a>
 
         <div class="items-center hidden lg:flex gap-x-3">
@@ -103,28 +103,22 @@
         </div>
 
         <a href="#" class="flex items-center px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800">
-            <span>
-                Next
-            </span>
-
+            <span>Next</span>
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 rtl:-scale-x-100">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />
             </svg>
         </a>
     </div>
 </section>
-</div>
 
 {% include "staff/staffAddModal.html" %}
 {% include "staff/staffDeleteModal.html" %}
+{% include "staff/staffEditModal.html" %}
 
 <script>
 function openDeleteModal(staffId, staffName) {
-  // Set the staff name in the modal
   document.getElementById('delete-staff-name').textContent = staffName;
-  // Set the form action to the correct delete URL
   document.getElementById('delete-staff-form').action = `/staff/delete/${staffId}/`;
-  // Show the modal
   delete_staff_modal.showModal();
 }
 </script>

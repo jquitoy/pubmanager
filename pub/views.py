@@ -51,45 +51,79 @@ def staff_add(request):
         form = StaffForm()
     return render(request, 'staff/staffAdd.html', {'form': form})
 
+# def staff_edit(request, staffId):
+#     try:
+#         if request.method == 'POST':
+#             staffObj = Staffs.objects.get(pk=staffId)
+
+#             fullName = request.POST.get('full_name')
+#             position = request.POST.get('position')
+#             email = request.POST.get('email')
+#             roles_selected = request.POST.getlist('role[]')
+
+#             form_data = {
+#                 'fullName': fullName,
+#                 'position': position,
+#                 'email': email,
+#                 'roles_selected': roles_selected
+#             }
+
+#             # Update staff if validation passes
+#             staffObj.full_name = fullName
+#             staffObj.position = position
+#             staffObj.email = email
+#             staffObj.role.set(roles_selected)
+#             staffObj.save()
+
+#             return redirect('/staff/list')
+
+#         else:
+#             staffObj = Staffs.objects.get(pk=staffId)
+#             roles = Roles.objects.all()
+
+#             data = {
+#                 'staff': staffObj,
+#                 'roles': roles
+#             }
+
+#             return render(request, 'staff/staffEdit.html', data)
+
+#     except Exception as e:
+#         return HttpResponse(f'Error occured during edit staff: {e}')
+
 def staff_edit(request, staffId):
-    try:
-        if request.method == 'POST':
-            staffObj = Staffs.objects.get(pk=staffId)
+    staff = get_object_or_404(Staffs, pk=staffId)
+    roles = Roles.objects.all()
+    
+    if request.method == "POST":
+        # handle form submission
+        staffObj = Staffs.objects.get(pk=staffId)
 
-            fullName = request.POST.get('full_name')
-            position = request.POST.get('position')
-            email = request.POST.get('email')
-            roles_selected = request.POST.getlist('role[]')
+        fullName = request.POST.get('full_name')
+        position = request.POST.get('position')
+        email = request.POST.get('email')
+        roles_selected = request.POST.getlist('role[]')
 
-            form_data = {
-                'fullName': fullName,
-                'position': position,
-                'email': email,
-                'roles_selected': roles_selected
-            }
+        form_data = {
+            'fullName': fullName,
+            'position': position,
+            'email': email,
+            'roles_selected': roles_selected
+        }
 
-            # Update staff if validation passes
-            staffObj.full_name = fullName
-            staffObj.position = position
-            staffObj.email = email
-            staffObj.role.set(roles_selected)
-            staffObj.save()
+        # Update staff if validation passes
+        staffObj.full_name = fullName
+        staffObj.position = position
+        staffObj.email = email
+        staffObj.role.set(roles_selected)
+        staffObj.save()
 
-            return redirect('/staff/list')
-
-        else:
-            staffObj = Staffs.objects.get(pk=staffId)
-            roles = Roles.objects.all()
-
-            data = {
-                'staff': staffObj,
-                'roles': roles
-            }
-
-            return render(request, 'staff/staffEdit.html', data)
-
-    except Exception as e:
-        return HttpResponse(f'Error occured during edit staff: {e}')
+        return redirect('/staff/list')
+    
+    if request.headers.get('HX-Request'):
+        return render(request, "staff/partials/edit_form.html", {"staff": staff, "roles": roles})
+    else:
+        return render(request, "staff/staffEdit.html", {"staff": staff, "roles": roles})
     
 def staff_delete(request, staffId):
 
