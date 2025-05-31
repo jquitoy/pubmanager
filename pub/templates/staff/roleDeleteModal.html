@@ -1,0 +1,20 @@
+<dialog id="delete_role_modal" class="modal">
+  <div class="modal-box">
+    <h2 class="text-2xl font-bold mb-6 text-center">Delete Staff</h2>
+    <p class="mb-6 text-center">
+      Are you sure you want to delete the record of <br> <span id="delete-role-name" class="font-bold text-xl"></span>?
+    </p>
+    <div class="flex justify-end gap-2">
+      <form id="delete-role-form" method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-error">Delete Role</button>
+      </form>
+      <form method="dialog">
+        <button type="submit" class="btn">Cancel</button>
+      </form>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
+</dialog>

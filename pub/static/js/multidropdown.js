@@ -45,3 +45,4 @@ document.body.addEventListener('htmx:afterSettle', function(evt) {
         document.getElementById('edit_staff_modal').showModal();
     }
 });
+

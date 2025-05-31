@@ -1,18 +1,94 @@
 {% extends "layout/base.html" %}
 
 {% block 'content' %}
-	<div class="flex">
+<section class="mt-25 container px-8">
+    <!-- Header Section -->
+    <div class="flex justify-between items-center mb-6">
+        <div class="flex items-center gap-x-3">
+            <h2 class="text-3xl font-extrabold">Role List</h2>
+            <span class="px-3 py-1 text-xs badge badge-primary">{{ roles.count }} roles</span>
+        </div>
+        <button class="btn btn-outline btn-primary" onclick="add_role_modal.showModal()">Add Role</button>
+    </div>
 
-	
-	<h1 class="text-2xl ">role List</h1>
-	<a href="{% url "role_add" %}" class="bg-green-500 p-3	 rounded-lg">Add Role</a>
-	<br><br>
+    <!-- Table Section -->
+    <div class="flex flex-col">
+        <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+                <div class="overflow-hidden border border-base-300 dark:border-gray-700 md:rounded-lg">
+                    <div class="overflow-x-auto">
+                      <table class="table">
+                        <!-- head -->
+                        <thead>
+                          <tr>
+                            <th>Role Name</th>
+                            <th>Num. of Staff</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for role in roles_with_counts %}
+                          <tr class="hover:bg-base-300">
+                            <td>{{ role.role }}</td>
+							<td>{{ role.staff_count }}</td>
 
-	</div>
+                            <td>
+                              <div class="flex gap-2">
+                                <!-- Edit Button -->
+                                <button class="btn btn-xs btn-ghost p-1 group"
+                                    hx-get="/roles/edit/{{ role.role_id }}/"
+                                    hx-target="#edit-role-modal-content"
+                                    hx-swap="innerHTML"
+                                    hx-trigger="click"
+                                    title="Edit">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400 group-hover:text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-1.414.586H7v-3a2 2 0 01.586-1.414z" />
+                                    </svg>
+                                  </button>
 
-	{% for role in roles  %}
-		<ul>
-			<li>{{role.role}}</li>
-		</ul>
-	{% endfor %}
+                                <!-- Delete Button -->
+                                <button class="btn btn-xs btn-ghost p-1"
+                                onclick="openDeleteModal('{{ role.role_id }}', '{{ role.role|escapejs }}')"
+                                title="Delete">
+                                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400 group-hover:text-error hover:text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </td>
+
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% include "staff/roleAddModal.html" %}
+{% include "staff/roleDeleteModal.html" %}
+{% include "staff/roleEditModal.html" %}
+
+
+<script>
+function openDeleteModal(roleId, role) {
+  document.getElementById('delete-role-name').textContent = role;
+  document.getElementById('delete-role-form').action = `/roles/delete/${roleId}/`;
+  delete_role_modal.showModal();
+}
+</script>
+
+<script>
+	document.body.addEventListener('htmx:afterSettle', function(evt) {
+    if (evt.detail.target && evt.detail.target.id === "edit-role-modal-content") {
+        console.log('Modal content settled, initializing dropdown');
+        initMultiSelectTag('edit-role-modal-content');
+        document.getElementById('edit_role_modal').showModal();
+    }
+});
+</script>
 {% endblock 'content' %}
+

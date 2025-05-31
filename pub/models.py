@@ -9,6 +9,7 @@ class Roles(models.Model):
   role_id = models.BigAutoField(primary_key=True, blank=False)
   role = models.CharField(max_length=55, blank=False)
 
+
 class Staffs(models.Model):
   class Meta:
     db_table = 'tbl_staffs'

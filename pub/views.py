@@ -4,6 +4,8 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_GET
 from .forms import RoleForm, StaffForm, TaskWithAssignmentForm
 from .models import Roles, Staffs, Tasks, Assignments
+from django.db.models import Count
+
 
 
 # Create your views here.
@@ -50,46 +52,6 @@ def staff_add(request):
     else:
         form = StaffForm()
     return render(request, 'staff/staffAdd.html', {'form': form})
-
-# def staff_edit(request, staffId):
-#     try:
-#         if request.method == 'POST':
-#             staffObj = Staffs.objects.get(pk=staffId)
-
-#             fullName = request.POST.get('full_name')
-#             position = request.POST.get('position')
-#             email = request.POST.get('email')
-#             roles_selected = request.POST.getlist('role[]')
-
-#             form_data = {
-#                 'fullName': fullName,
-#                 'position': position,
-#                 'email': email,
-#                 'roles_selected': roles_selected
-#             }
-
-#             # Update staff if validation passes
-#             staffObj.full_name = fullName
-#             staffObj.position = position
-#             staffObj.email = email
-#             staffObj.role.set(roles_selected)
-#             staffObj.save()
-
-#             return redirect('/staff/list')
-
-#         else:
-#             staffObj = Staffs.objects.get(pk=staffId)
-#             roles = Roles.objects.all()
-
-#             data = {
-#                 'staff': staffObj,
-#                 'roles': roles
-#             }
-
-#             return render(request, 'staff/staffEdit.html', data)
-
-#     except Exception as e:
-#         return HttpResponse(f'Error occured during edit staff: {e}')
 
 def staff_edit(request, staffId):
     staff = get_object_or_404(Staffs, pk=staffId)
@@ -153,13 +115,25 @@ def staff_delete(request, staffId):
 def role_list(request):
     try:
         roles = Roles.objects.all()
+            # Get counts for all roles in one query
+        roles_with_counts = Roles.objects.annotate(
+            staff_count=Count('staffs')  # Note the related_name
+        ).order_by('role')
+
 
         data = {
-            'roles':roles
+            'roles':roles,
+            'roles_with_counts': roles_with_counts,  # Add this line
         }
 
+        if request.method == 'POST':
+            role = request.POST.get('role_name')
+
+            Roles.objects.create(role=role).save()
+            return redirect('/roles/list')
+
         return render(request, 'staff/roleList.html', data)
-    
+
     except Exception as e:
         return HttpResponse(f'Error occured during load Roles: {e}')
 
@@ -167,7 +141,7 @@ def role_list(request):
 def role_add(request):
     try:
         if request.method == 'POST':
-            role = request.POST.get('role')
+            role = request.POST.get('role_name')
 
             Roles.objects.create(role=role).save()
             return redirect('/roles/list')
@@ -177,6 +151,52 @@ def role_add(request):
         
     except Exception as e:
         return HttpResponse(f'Error occured during add gender: {e}')
+    
+def role_edit(request, roleId):
+    try:
+        roleObj = Roles.objects.get(pk=roleId)
+
+        if request.method == 'POST':
+            role = request.POST.get('role_name')
+            roleObj.role = role
+            roleObj.save()
+            return redirect('/roles/list')
+
+        else:
+            data = {
+                'role': roleObj,
+            }
+            if request.headers.get('HX-Request'):
+                return render(request, 'staff/partials/edit_role_form.html', data)
+            else:
+                return render(request, 'staff/roleList.html', data)
+
+    except Exception as e:
+        return HttpResponse(f'Error occured during edit')
+    
+
+def role_delete(request, roleId):
+
+    try:
+        if request.method == 'POST':
+            roleObj = Roles.objects.get(pk=roleId)
+            roleObj.delete()
+
+            return redirect('/roles/list')
+
+        else:
+            roleObj = Roles.objects.get(pk=roleId)
+
+            data = {
+                'role': roleObj,
+            }
+
+            return render(request, '/roles/list', data)
+
+
+    
+    except Exception as e:
+        return HttpResponse(f'Error occured during delete gender: {e}')
     
 
 
