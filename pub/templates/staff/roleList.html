@@ -81,6 +81,7 @@ function openDeleteModal(roleId, role) {
 }
 </script>
 
+{% comment %} open modal for edit role after htmx swap {% endcomment %}
 <script>
 	document.body.addEventListener('htmx:afterSettle', function(evt) {
     if (evt.detail.target && evt.detail.target.id === "edit-role-modal-content") {
@@ -90,5 +91,6 @@ function openDeleteModal(roleId, role) {
     }
 });
 </script>
+
 {% endblock 'content' %}
 
