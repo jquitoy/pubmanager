@@ -229,3 +229,6 @@ def load_staffs(request):
 def get_staff_form(request, staff_id):
     staff = get_object_or_404(Staffs, id=staff_id)
     return render(request, 'staff/staffList.html', {'staff': staff})
+
+def calendar(request):
+    return render(request, 'task/calendar.html')
