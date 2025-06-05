@@ -5,7 +5,7 @@ from django.views.decorators.http import require_GET
 from .forms import RoleForm, StaffForm, TaskWithAssignmentForm
 from .models import Roles, Staffs, Tasks, Assignments
 from django.db.models import Count
-
+from django.core.serializers.json import DjangoJSONEncoder
 
 
 # Create your views here.
@@ -231,4 +231,56 @@ def get_staff_form(request, staff_id):
     return render(request, 'staff/staffList.html', {'staff': staff})
 
 def calendar(request):
-    return render(request, 'task/calendar.html')
+    tasks = Tasks.objects.all()
+    assignments = Assignments.objects.all()
+    roles = Roles.objects.all()
+    staffs = Staffs.objects.all()
+
+    staff_by_role = {}
+    for role in roles:
+        staff_by_role[role.role_id] = [
+            {'id': staff.staff_id, 'name': staff.full_name}
+            for staff in staffs.filter(role=role)
+        ]
+    data = {  # <-- define context here
+        'tasks': tasks,
+        'assignments': assignments,
+        'roles': roles,
+        'staff_by_role_json': json.dumps(staff_by_role, cls=DjangoJSONEncoder),
+        'Tasks': Tasks
+    }
+
+    if request.method == 'POST':
+        # Get task fields
+        title = request.POST.get('title')
+        task_type = request.POST.get('task_type')
+        deadline = request.POST.get('deadline')
+        description = request.POST.get('description')
+
+        # Create the Task
+        task = Tasks.objects.create(
+            title=title,
+            task_type=task_type,
+            deadline=deadline,
+            description=description,
+        )
+
+        # Get all role/staff pairs
+        roles_selected = request.POST.getlist('role[]')
+        staffs_selected = request.POST.getlist('staff[]')
+
+        # Create assignments for each pair
+        for role_id, staff_id in zip(roles_selected, staffs_selected):
+            if role_id and staff_id:
+                Assignments.objects.create(
+                    task=task,
+                    staff=Staffs.objects.get(pk=staff_id),
+                    role=Roles.objects.get(pk=role_id).role_id # Save role name/label
+                )
+
+        return redirect('/calendar')  # or wherever you want to go after adding
+
+    return render(request, 'task/calendar.html', data)
+
+# def staff_list(request):
+    

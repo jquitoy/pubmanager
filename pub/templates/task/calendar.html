@@ -1,5 +1,5 @@
 {% extends "layout/base.html" %}
-
+{% load static %}
 {% block 'content' %}
 <div class="grid grid-cols-3 gap-4 mt-5 sm:grid-cols-3 md:gap-6">
   <!-- Metric Item Start -->
@@ -77,15 +77,99 @@
   </div>
 </div>
 {% comment %} end metrics {% endcomment %}
+<div class="my-8 border border-base-300 rounded-2xl p-5 shadow-2xl">
+  <div class="grid grid-cols-3 gap-6 h-[675px]">
+    <!-- First row: Headings -->
+    <div class="flex items-center">
+    </div>
+    <div class="col-span-2 flex items-center">
+      <!-- Optionally, you can put a calendar heading here, or leave empty for alignment -->
+    </div>
+    <!-- Second row: Content -->
+    <div class="flex flex-col gap-3 overflow-y-auto max-h-full">
+      <div class="sticky top-0 z-10 bg-base-100 pb-2">
+        <h1 class="text-2xl font-bold">Tasks List</h1>
+      </div>
+      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
+      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
+      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
+      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
+      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
+      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
+      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
+      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
+      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
+      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
+      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
+      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
 
-<h1>welcome to the calendar page</h1>
-<div class="grid grid-cols-3 grid-flow-row gap-4">
-	<div class="grid grid-cols-1 grid-flow-row gap-y-4">
-		<div class="bg-primary py-8 px-5 rounded-2xl">ambot</div>
-		<div class="bg-primary p-5 rounded-2xl">ambot</div>
-		<div class="bg-primary p-5 rounded-2xl">ambot</div>
-		<div class="bg-primary p-5 rounded-2xl">ambot</div>
 
-	
+      <!-- ...more tasks... -->
+    </div>
+    <div class="col-span-2">
+      <div id="calendar" class="h-full"></div>
+    </div>
+  </div>
 </div>
+<script src="{% static 'js/calendar.js' %}"></script>
+
+
+{% include "task/taskAddModal.html" %}
+
+<script>
+const staffData = {{ staff_by_role_json|safe }}; // Pass this from your Django view as a JSON dict: {role_id: [{id, name}, ...]}
+function updateStaffOptions(roleSelect) {
+  const staffSelect = roleSelect.closest('.staff-role-row').querySelector('.staff-select');
+  const roleId = roleSelect.value;
+  staffSelect.innerHTML = '<option value="">Select Staff</option>';
+  if (roleId && staffData[roleId]) {
+    staffData[roleId].forEach(staff => {
+      const opt = document.createElement('option');
+      opt.value = staff.id;
+      opt.textContent = staff.name;
+      staffSelect.appendChild(opt);
+    });
+  }
+}
+
+document.addEventListener('change', function(e) {
+  if (e.target.classList.contains('role-select')) {
+    updateStaffOptions(e.target);
+  }
+});
+
+document.getElementById('add-staff-role-btn').addEventListener('click', function() {
+  const container = document.getElementById('staff-role-container');
+  const firstRow = container.querySelector('.staff-role-row');
+  const newRow = firstRow.cloneNode(true);
+  // Reset selects
+  newRow.querySelector('.role-select').selectedIndex = 0;
+  const staffSelect = newRow.querySelector('.staff-select');
+  staffSelect.innerHTML = '<option value="">Select Staff</option>';
+  container.appendChild(newRow);
+  updateRemoveButtons();
+});
+
+function updateRemoveButtons() {
+    const rows = document.querySelectorAll('.staff-role-row');
+    rows.forEach(row => row.querySelector('.remove-row-btn').classList.add('hidden'));
+    if (rows.length > 1) {
+        rows.forEach(row => row.querySelector('.remove-row-btn').classList.remove('hidden'));
+    }
+}
+
+// Remove row on X button click
+document.getElementById('staff-role-container').addEventListener('click', function(e) {
+    if (e.target.closest('.remove-row-btn')) {
+        const row = e.target.closest('.staff-role-row');
+        row.remove();
+        updateRemoveButtons();
+    }
+});
+
+// Initial call to set remove button visibility
+updateRemoveButtons();
+</script>
+
+
 {% endblock 'content' %}

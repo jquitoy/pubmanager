@@ -35,8 +35,8 @@ class Tasks(models.Model):
   OBSERVANCE = 'OBS'
   COVERAGE = 'COV'
   TASK_TYPE_CHOICES = [
-      (OBSERVANCE, 'Observance (Mandatory)'),
-      (COVERAGE, 'Coverage (Optional)'),
+      (OBSERVANCE, 'Observance'),
+      (COVERAGE, 'Coverage'),
   ]
   
   title = models.CharField(max_length=200)  # "Valentine’s Day Post"
