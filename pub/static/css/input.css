@@ -8,3 +8,42 @@
 @plugin "daisyui" {
   themes: bumblebee --default, dark --prefersdark;
 }
+
+:root {
+  --fc-event-border-color: none;
+}
+
+.fc-toolbar-title {
+  font-weight: bold;
+}
+
+/* Status-based event colors using Tailwind or plain CSS for reliability */
+.event-CANCELLED {
+  background-color: gray !important; /* Tailwind blue-600 */
+  text-decoration: line-through;
+  color: #fff !important;
+}
+.event-CANCELLED .fc-event-title {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+.event-WORKING {
+  background-color:  #f1c40f  ; /* Tailwind yellow-200 */
+  color: #70340f !important; /* Tailwind yellow-900 */
+}
+.event-POSTED {
+  background-color:  #1e8449  !important; /* Tailwind green-200 */
+  color: #166534 !important; /* Tailwind green-800 */
+}
+.event-MISSED {
+  background-color: #c0392b  !important; /* Tailwind red-200 */
+  color: #991b1b !important; /* Tailwind red-800 */
+}
+
+/* Ensure event hover matches theme */
+.event-not_started:hover,
+.event-in_progress:hover,
+.event-completed:hover,
+.event-cancelled:hover {
+  filter: brightness(0.95);
+}

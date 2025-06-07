@@ -38,6 +38,13 @@ class Tasks(models.Model):
       (OBSERVANCE, 'Observance'),
       (COVERAGE, 'Coverage'),
   ]
+
+  STATUS_CHOICES = [
+      ('POSTED', 'Posted'),
+      ('MISSED', 'Missed'),
+      ('CANCELLED', 'Cancelled'),
+      ('WORKING', 'Working'),
+  ]
   
   title = models.CharField(max_length=200)  # "Valentine’s Day Post"
   task_type = models.CharField(max_length=3, choices=TASK_TYPE_CHOICES)  # OBS/COV
@@ -46,7 +53,7 @@ class Tasks(models.Model):
   created_at = models.DateTimeField(auto_now_add=True)
   status = models.CharField(  # Overall task status
       max_length=20,
-      choices=[('POSTED', 'Posted'), ('MISSED', 'Missed'), ('CANCELLED', 'Cancelled'), ('WORKING', 'Working')],
+      choices=STATUS_CHOICES,
       default='WORKING'
   )
 

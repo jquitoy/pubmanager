@@ -242,45 +242,110 @@ def calendar(request):
             {'id': staff.staff_id, 'name': staff.full_name}
             for staff in staffs.filter(role=role)
         ]
-    data = {  # <-- define context here
+
+    events = []
+    for task in tasks:
+        deadline = task.deadline
+        event = {
+            "id": task.id,
+            "title": task.title,
+            "start": deadline.strftime("%Y-%m-%d"),
+            "description": task.description,
+            "task_type": task.task_type,
+            "status": task.status,
+            "extendedProps": {
+                "description": task.description,
+                "task_type": task.task_type,
+                "status": task.status,
+                "assignments": [
+                    {
+                        "staff_id": assignment.staff.staff_id,
+                        "role_id": int(assignment.role) if str(assignment.role).isdigit() else assignment.role,
+                    }
+                    for assignment in assignments.filter(task=task)
+                ]
+            }
+        }
+        events.append(event)
+
+    data = {
         'tasks': tasks,
         'assignments': assignments,
         'roles': roles,
         'staff_by_role_json': json.dumps(staff_by_role, cls=DjangoJSONEncoder),
-        'Tasks': Tasks
+        'Tasks': Tasks,
+        "events_json": json.dumps(events, cls=DjangoJSONEncoder),
     }
 
     if request.method == 'POST':
-        # Get task fields
+        task_id = request.POST.get('task_id')
+        title = request.POST.get('title')
+        task_type = request.POST.get('task_type')
+        deadline = request.POST.get('deadline')
+        description = request.POST.get('description')
+        status = request.POST.get('status') or 'WORKING'
+        roles_selected = request.POST.getlist('role[]')
+        staffs_selected = request.POST.getlist('staff[]')
+        if 'delete_task' in request.POST and task_id:
+            # Delete task and its assignments
+            Tasks.objects.filter(pk=task_id).delete()
+            Assignments.objects.filter(task_id=task_id).delete()
+            return redirect('/calendar')
+        if task_id:
+            # Edit existing task
+            task = Tasks.objects.get(pk=task_id)
+            task.title = title
+            task.task_type = task_type
+            task.deadline = deadline
+            task.description = description
+            task.status = status
+            task.save()
+            # Remove old assignments and add new
+            Assignments.objects.filter(task=task).delete()
+            for role_id, staff_id in zip(roles_selected, staffs_selected):
+                if role_id and staff_id:
+                    Assignments.objects.create(
+                        task=task,
+                        staff=Staffs.objects.get(pk=staff_id),
+                        role=Roles.objects.get(pk=role_id).role_id
+                    )
+        else:
+            # Add new task
+            task = Tasks.objects.create(
+                title=title,
+                task_type=task_type,
+                deadline=deadline,
+                description=description,
+                status=status,
+            )
+            for role_id, staff_id in zip(roles_selected, staffs_selected):
+                if role_id and staff_id:
+                    Assignments.objects.create(
+                        task=task,
+                        staff=Staffs.objects.get(pk=staff_id),
+                        role=Roles.objects.get(pk=role_id).role_id
+                    )
+        return redirect('/calendar')
+
+    return render(request, 'task/calendar.html', data)
+
+def task_edit(request, taskId):
+    task = get_object_or_404(Tasks, pk=taskId)
+    assignments = Assignments.objects.filter(task=task)
+
+    if request.method == "POST":
+        # handle form submission
         title = request.POST.get('title')
         task_type = request.POST.get('task_type')
         deadline = request.POST.get('deadline')
         description = request.POST.get('description')
 
-        # Create the Task
-        task = Tasks.objects.create(
-            title=title,
-            task_type=task_type,
-            deadline=deadline,
-            description=description,
-        )
+        task.title = title
+        task.task_type = task_type
+        task.deadline = deadline
+        task.description = description
+        task.save()
 
-        # Get all role/staff pairs
-        roles_selected = request.POST.getlist('role[]')
-        staffs_selected = request.POST.getlist('staff[]')
+        return redirect('/calendar')
 
-        # Create assignments for each pair
-        for role_id, staff_id in zip(roles_selected, staffs_selected):
-            if role_id and staff_id:
-                Assignments.objects.create(
-                    task=task,
-                    staff=Staffs.objects.get(pk=staff_id),
-                    role=Roles.objects.get(pk=role_id).role_id # Save role name/label
-                )
-
-        return redirect('/calendar')  # or wherever you want to go after adding
-
-    return render(request, 'task/calendar.html', data)
-
-# def staff_list(request):
-    
+    return render(request, 'task/taskEdit.html', {'task': task, 'assignments': assignments})

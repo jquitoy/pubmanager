@@ -1,8 +1,9 @@
-<dialog id="add_task_modal" class="modal">
-    <div id="add-task-modal-content" class="modal-box max-h-[656px]">
-        <h2 class="text-2xl font-bold mb-6 text-center">Add Task</h2>
+<dialog id="edit_task_modal" class="modal">
+    <div id="edit-task-modal-content" class="modal-box max-h-[656px]">
+        <h2 class="text-2xl font-bold mb-6 text-center">Edit Task</h2>
         <form method="post">
         {% csrf_token %}
+        <input type="hidden" name="task_id" id="edit-task-id">
         <div class="form-control mb-4">
             <label for="title" class="label">
             <span class="label-text font-semibold">Title</span>
@@ -26,6 +27,17 @@
                     <span class="label-text font-semibold">Deadline</span>
                 </label>
                 <input type="date" name="deadline" id="deadline" class="input input-bordered w-full" required>
+            </div>
+            <div class="form-control mb-4 w-1/2">
+                <label for="status" class="label">
+                    <span class="label-text font-semibold">Status</span>
+                </label>
+                <select name="status" id="status" class="select select-bordered w-full" required>
+                    <option value="">Select Status</option>
+                    {% for value, label in Tasks.STATUS_CHOICES %}
+                        <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
             </div>
         </div>
         <div class="form-control mb-4">
@@ -70,7 +82,8 @@
             </div>
         </div>
         <button type="button" class="add-staff-role-btn btn btn-outline btn-sm mb-4">Add More Staff</button>
-        <div class="modal-action">
+        <div class="modal-action flex flex-row gap-2">
+            <button type="submit" name="delete_task" value="1" class="btn btn-error">Delete</button>
             <button type="submit" class="btn btn-primary">Save</button>
         </div>
         </form>
@@ -78,4 +91,5 @@
     <form method="dialog" class="modal-backdrop">
         <button>close</button>
     </form>
+
 </dialog>

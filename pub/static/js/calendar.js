@@ -2,69 +2,33 @@ document.addEventListener('DOMContentLoaded', function() {
   var calendarEl = document.getElementById('calendar');
 
   var calendar = new FullCalendar.Calendar(calendarEl, {
-    
     dateClick: function(info) {
+      document.getElementById('deadline').value = info.dateStr;
       add_task_modal.showModal()
     },
 
+    eventClick: function(info) {
+
+      // edit_task_modal.showModal()
+
+      var title = info.event.title;
+      var start = info.event.start ;
+      var description = info.event.extendedProps.description || '';
+      var id = info.event.id;
+
+      edit_task_modal.showModal()
+
+
+    },  
+
     initialView: 'dayGridMonth',
-    initialDate: '2025-04-07',
+    initialDate: new Date(),
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
       right: 'dayGridMonth,timeGridWeek,timeGridDay'
     },
-
-    
-
-    events: [
-      {
-        title: 'All Day Event',
-        start: '2025-04-01'
-      },
-      {
-        title: 'Long Event',
-        start: '2025-04-07',
-        end: '2025-04-10'
-      },
-      {
-        groupId: '999',
-        title: 'Repeating Event',
-        start: '2025-04-09T16:00:00'
-      },
-      {
-        groupId: '999',
-        title: 'Repeating Event',
-        start: '2025-04-16T16:00:00'
-      },
-      {
-        title: 'Conference',
-        start: '2025-04-11',
-        end: '2025-04-13'
-      },
-      {
-        title: 'Meeting',
-        start: '2025-04-12T10:30:00',
-        end: '2025-04-12T12:30:00'
-      },
-      {
-        title: 'Lunch',
-        start: '2025-04-12T12:00:00'
-      },
-      {
-        title: 'Meeting',
-        start: '2025-04-12T14:30:00'
-      },
-      {
-        title: 'Birthday Party',
-        start: '2025-04-13T07:00:00'
-      },
-      {
-        title: 'Click for Google',
-        url: 'https://google.com/',
-        start: '2025-04-28'
-      }
-    ]
+    events: window.calendarEvents // <-- Use your JSON here
   });
 
   calendar.render();
