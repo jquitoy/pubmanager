@@ -397,3 +397,64 @@ def task_edit(request, taskId):
         return redirect('/calendar')
 
     return render(request, 'task/taskEdit.html', {'task': task, 'assignments': assignments})
+
+def report(request):
+    tasks = Tasks.objects.all()
+    assignments = Assignments.objects.all()
+    roles = Roles.objects.all()
+    staffs = Staffs.objects.all()
+
+    taskPostedCount = Tasks.objects.filter(status='POSTED').count()
+    taskPendingCount = Tasks.objects.filter(status='WORKING').count()
+    taskMissedCount = Tasks.objects.filter(status='MISSED').count()
+
+    data = {
+        'tasks': tasks,
+        'assignments': assignments,
+        'roles': roles,
+        'staffs': staffs,
+        "taskPostedCount": taskPostedCount,
+        "taskPendingCount": taskPendingCount,
+        "taskMissedCount": taskMissedCount,
+    }
+
+    return render(request, 'dashboard/dashboard.html', data)
+
+def dashboard(request):
+    staffs = Staffs.objects.all().order_by('staff_id')
+    staff_names = [s.full_name for s in staffs]
+    pendingTotal = Tasks.objects.filter(status='WORKING').count()
+    # For each staff, count tasks by status
+    posted_counts = []
+    pending_counts = []
+    missed_counts = []
+    for staff in staffs:
+        assignments = Assignments.objects.filter(staff=staff)
+        posted = assignments.filter(task__status='POSTED').count()
+        pending = assignments.filter(task__status='WORKING').count()
+        missed = assignments.filter(task__status='MISSED').count()
+        posted_counts.append(posted)
+        pending_counts.append(pending)
+        missed_counts.append(missed)
+
+    # Role breakdown for pie chart
+    roles = Roles.objects.all()
+    role_labels = [role.role for role in roles]
+    # Count assignments per role (Assignments.role stores role_id as string/int)
+    role_counts = [Assignments.objects.filter(role=str(role.role_id)).count() for role in roles]
+
+    data = {
+        "staffs": staffs,
+        'staff_names': json.dumps(staff_names),
+        'posted_counts': json.dumps(posted_counts),
+        'pending_counts': json.dumps(pending_counts),
+        'missed_counts': json.dumps(missed_counts),
+        'role_labels': json.dumps(role_labels),
+        'role_counts': json.dumps(role_counts),
+        'staffNames': staff_names,
+        'postedCounts': posted_counts,
+        'pendingCounts': pending_counts,    
+        'missedCounts': missed_counts,
+        'pendingTotal': pendingTotal,
+    }
+    return render(request, 'dashboard/dashboard.html', data)

@@ -23,7 +23,10 @@ urlpatterns = [
 
 	path('calendar/', views.calendar, name='calendar'),
 	path('task/edit/<int:taskId>', views.task_edit, name='task_edit'),
-	# path('task/delete/<int:taskId>', views.task_delete, name='task_delete'),	
+	# path('task/delete/<int:taskId>', views.task_delete, name='task_delete'),
+
+	path('report/', views.dashboard, name='report'), 
+		
 
 	
 

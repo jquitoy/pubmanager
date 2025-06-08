@@ -1,0 +1,148 @@
+{% extends "layout/base.html" %}
+{% load static %}
+
+{% block 'content' %}
+
+<div class="grid grid-cols-2 gap-5 mt-5 mb-5">
+
+  <!-- Role Breakdown Card -->
+  <div class="border rounded-2xl border-base-300 shadow-2xl h-[475px] w-full flex flex-col items-center justify-center">
+    <h1 class="text-3xl font-bold text-center my-3">Roles Distribution</h1>
+    <div class="flex items-center justify-center w-full h-[400px]">
+      <canvas id="roleBreakdown"></canvas>
+    </div>
+  </div>
+
+  <div class="border rounded-2xl border-base-300 shadow-2xl h-[475px] w-full flex flex-col items-center justify-center">
+    <h1 class="text-3xl font-bold text-center my-3">Overall Progress</h1>
+    <div class="flex items-center justify-center w-full h-[400px]">
+      <canvas id="progressBar"></canvas>
+    </div>
+  </div>
+
+</div>
+
+
+
+<div class="border rounded-2xl border-base-300 shadow-2xl p-5 mx-1 mb-5 h-[675px] overflow-x-auto overflow-y-auto">
+    <h1 class="text-5xl font-bold text-center mb-5">Staff Task Status</h1>
+	<canvas id="staffStatus" style="width:100%; min-width:600px; height:675px;"></canvas>
+</div>
+
+
+
+<script>
+let ctx = document.getElementById("staffStatus").getContext("2d");
+
+let chart = new Chart(ctx, {
+  type: "bar",
+  data: {
+     labels: {{ staff_names|safe }},
+     datasets: [
+        {
+          label: "Posted",
+          backgroundColor: "#1e8449",
+          data: {{ posted_counts|safe }}
+        },
+        {
+          label: "Pending",
+          backgroundColor: "#f1c40f ",
+          data: {{ pending_counts|safe }}
+        },
+        {
+          label: "Missed",
+          backgroundColor: "#c0392b",
+          data: {{ missed_counts|safe }}
+        }
+     ]
+  },
+  options: {
+      responsive: false,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      scales: {
+        x: {
+          stacked: true
+        },
+        y: {
+          stacked: true
+        }
+      },
+      plugins: {
+        legend: {
+          display: true
+        }
+      },
+    },
+});
+
+
+let roleBreakdown = document.getElementById("roleBreakdown").getContext("2d");
+
+let roleChart = new Chart(roleBreakdown, {
+  type: 'pie',
+  data: {
+    labels: {{ role_labels|safe }},
+    datasets: [{
+      label: 'Tasks',
+      data: {{ role_counts|safe }},
+      backgroundColor: [
+        'rgb(255, 99, 132)',
+        'rgb(54, 162, 235)',
+        'rgb(255, 205, 86)',
+        'rgb(75, 192, 192)',
+        'rgb(153, 102, 255)',
+        'rgb(255, 159, 64)',
+        'rgb(201, 203, 207)'
+      ],
+      hoverOffset: 4
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top'
+      }
+    }
+  }
+});
+/* let progress = document.getElementById("progressBar").getContext("2d");
+
+let progressBar = new Chart(progress, {
+  type: "bar",
+    data: {
+      labels: {{ staff_names|safe }},
+      datasets: [
+          {
+            label: "Posted",
+            backgroundColor: "#1e8449",
+            data: {{ posted_counts|safe }}
+          },
+          {
+            label: "Pending",
+            backgroundColor: "#f1c40f ",
+            data: {{ pending_counts|safe }}
+          },
+          {
+            label: "Missed",
+            backgroundColor: "#c0392b",
+            data: {{ missed_counts|safe }}
+          }
+      ]
+    },
+    options: {
+        responsive: false,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+    }
+  }
+) */
+</script>
+
+
+
+{% endblock 'content' %}
+

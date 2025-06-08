@@ -41,9 +41,9 @@ class Tasks(models.Model):
 
   STATUS_CHOICES = [
       ('POSTED', 'Posted'),
+      ('PENDING', 'Pending'),
       ('MISSED', 'Missed'),
       ('CANCELLED', 'Cancelled'),
-      ('WORKING', 'Working'),
   ]
   
   title = models.CharField(max_length=200)  # "Valentine’s Day Post"
