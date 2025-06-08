@@ -22,7 +22,7 @@
     <div class="mt-3 flex items-end justify-between">
       <div>
         <span class="text-md text-base-content">Tasks Completed</span>
-        <h4 class="mt-2 text-3xl font-bold text-base-content/90">3,782</h4>
+        <h4 class="mt-2 text-3xl font-bold text-base-content/90">{{ taskPostedCount }}</h4>
       </div>
     </div>
   </div>
@@ -47,7 +47,7 @@
     <div class="mt-3 flex items-end justify-between">
       <div>
         <span class="text-md text-base-content">Tasks Pending</span>
-        <h4 class="mt-2 text-3xl font-bold text-base-content/90">3,782</h4>
+        <h4 class="mt-2 text-3xl font-bold text-base-content/90">{{taskPendingCount}} </h4>
       </div>
     </div>
   </div>
@@ -72,7 +72,7 @@
     <div class="mt-3 flex items-end justify-between">
       <div>
         <span class="text-md text-base-content">Tasks Missed</span>
-        <h4 class="mt-2 text-3xl font-bold text-base-content/90">3,782</h4>
+        <h4 class="mt-2 text-3xl font-bold text-base-content/90">{{taskMissedCount}} </h4>
       </div>
     </div>
   </div>
@@ -89,20 +89,34 @@
     <!-- Second row: Content -->
     <div class="flex flex-col gap-3 overflow-y-auto max-h-full">
       <div class="sticky top-0 z-10 bg-base-100 pb-2">
-        <h1 class="text-2xl font-bold">Tasks List</h1>
+        <h1 class="text-2xl font-bold">Pending Tasks</h1>
       </div>
-      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
-      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
-      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
-      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
-      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
-      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
-      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
-      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
-      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
-      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
-      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
-      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center">ambot</div>
+
+      {% for item in tasksPendingWithStaff %}
+      <div class="bg-primary p-5 rounded-2xl max-h-20 flex items-center gap-5">
+        <div class="flex flex-col items-center ">
+            <h1 class="text-2xl font-bold leading-none ">
+            {{ item.task.deadline|date:"b"|upper }}
+            </h1>
+          <h1 class="text-4xl font-extrabold leading-none mt-0">
+            {{ item.task.deadline|date:"d" }}
+          </h1>
+        </div>
+        <div class="flex flex-col items-baseline ">
+          <div class="text-xl font-bold">
+            {{item.task.title}}
+          </div>
+          <div class="flex flex-row items-center gap-3">
+            {% for abbr in item.staff_display %}
+              <div>{{ abbr }}</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+      
+
+
 
 
       <!-- ...more tasks... -->
@@ -229,6 +243,7 @@
         info.el.classList.add(className);
       }
     },
+    dayMaxEvents: true, // allow "more" link when too many events
     events: {{ events_json|safe }},
   });
 

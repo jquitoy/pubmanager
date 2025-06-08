@@ -235,6 +235,12 @@ def calendar(request):
     assignments = Assignments.objects.all()
     roles = Roles.objects.all()
     staffs = Staffs.objects.all()
+    tasksPending = Tasks.objects.filter(status='WORKING').order_by('deadline')
+
+    taskPostedCount = Tasks.objects.filter(status='POSTED').count()
+    taskPendingCount = Tasks.objects.filter(status='WORKING').count()
+    taskMissedCount = Tasks.objects.filter(status='MISSED').count()
+
 
     staff_by_role = {}
     for role in roles:
@@ -268,13 +274,55 @@ def calendar(request):
         }
         events.append(event)
 
+    # Compute abbreviated staff names for each task
+    from collections import defaultdict
+    tasksPending = Tasks.objects.filter(status='WORKING').order_by('deadline')
+    tasks_pending_with_staff = []
+    for task in tasksPending:
+        # Get all assignments for this task, sorted by staff full name
+        assignments = list(Assignments.objects.filter(task=task).select_related('staff').order_by('staff__full_name'))
+        # Build a map of last_name -> list of (first_name, full_name)
+        last_name_map = defaultdict(list)
+        for a in assignments:
+            parts = a.staff.full_name.strip().split()
+            if len(parts) == 1:
+                first_name, last_name = parts[0], ''
+            else:
+                first_name, last_name = parts[0], parts[-1]
+            last_name_map[last_name].append((first_name, a.staff.full_name))
+        # Now, for each assignment, compute the display name
+        staff_display = []
+        for a in assignments:
+            parts = a.staff.full_name.strip().split()
+            if len(parts) == 1:
+                first_name, last_name = parts[0], ''
+            else:
+                first_name, last_name = parts[0], parts[-1]
+            same_last = sorted(last_name_map[last_name])
+            # Find this staff's index among those with the same last name
+            idx = [fn for fn, full in same_last].index(first_name)
+            if len(same_last) > 1 and idx > 0:
+                abbr = f"{first_name[:2]}.{last_name}"
+            else:
+                abbr = f"{first_name[:1]}.{last_name}"
+            staff_display.append(abbr)
+        tasks_pending_with_staff.append({
+            'task': task,
+            'staff_display': staff_display,
+        })
+
     data = {
         'tasks': tasks,
         'assignments': assignments,
         'roles': roles,
         'staff_by_role_json': json.dumps(staff_by_role, cls=DjangoJSONEncoder),
-        'Tasks': Tasks,
         "events_json": json.dumps(events, cls=DjangoJSONEncoder),
+        "Tasks": Tasks,
+        "tasksPending": tasksPending,
+        "tasksPendingWithStaff": tasks_pending_with_staff,
+        "taskPostedCount": taskPostedCount,
+        "taskPendingCount": taskPendingCount,
+        "taskMissedCount": taskMissedCount,
     }
 
     if request.method == 'POST':
