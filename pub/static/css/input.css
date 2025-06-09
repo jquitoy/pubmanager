@@ -8,6 +8,28 @@
 @plugin "daisyui" {
   themes: bumblebee --default, dark --prefersdark;
 }
+@layer utilities {
+  @keyframes float {
+    0%, 100% {
+      transform: none;
+    }
+    50% {
+      transform: translate(50%, 20%) rotateY(10deg) scale(1.2);
+    }
+  }
+  .animate-blob {
+    animation: float 20s ease-in-out infinite both alternate;
+  }
+}
+@layer utilities {
+    .animation-delay-2000 {
+        animation-delay: 2s;
+    }
+
+    .animation-delay-4000 {
+        animation-delay: 4s;
+    }
+}
 
 :root {
   --fc-event-border-color: none;

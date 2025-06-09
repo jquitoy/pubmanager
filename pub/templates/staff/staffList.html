@@ -1,42 +1,45 @@
 {% extends "layout/base.html" %}
 {% load static %}
 
+{% block 'title' %}Staffs{% endblock 'title' %}
+
+
 {% block 'content' %}
-<section class="mt-25 container px-8">
+<section class="mt-8 container px-2 sm:px-4 md:px-8">
     <!-- Header Section -->
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
         <div class="flex items-center gap-x-3">
-            <h2 class="text-3xl font-extrabold">Staff Members</h2>
-            <span class="px-3 py-1 text-xs badge badge-primary">{{ staffs.count }} members</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold">Staff Members</h2>
+            <span class="px-3 py-1 text-xs badge badge-primary">{{ staffCount }} members</span>
         </div>
-        <button class="btn btn-outline btn-primary" onclick="add_staff_modal.showModal()">Add Staff</button>
+        <button class="btn btn-outline btn-primary w-full sm:w-auto" onclick="add_staff_modal.showModal()">Add Staff</button>
     </div>
 
     <!-- Table Section -->
     <div class="flex flex-col">
-        <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+        <div class="-mx-2 -my-2 overflow-x-auto sm:-mx-4 md:-mx-6 lg:-mx-8">
             <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
                 <div class="overflow-hidden border border-base-300 dark:border-gray-700 md:rounded-lg">
                     <div class="overflow-x-auto">
-                      <table class="table">
+                      <table class="table w-full text-sm md:text-base">
                         <!-- head -->
                         <thead>
                           <tr>
-                            <th>#</th>
-                            <th>Name</th>
-                            <th>Position</th>
-                            <th>Email</th>
-                            <th>Roles</th>
-                            <th>Actions</th>
+                            <th class="whitespace-nowrap">#</th>
+                            <th class="whitespace-nowrap">Name</th>
+                            <th class="whitespace-nowrap">Position</th>
+                            <th class="whitespace-nowrap">Email</th>
+                            <th class="whitespace-nowrap">Roles</th>
+                            <th class="whitespace-nowrap">Actions</th>
                           </tr>
                         </thead>
                         <tbody>
                           {% for staff in staffs %}
                           <tr class="hover:bg-base-300">
-                            <th>{{ forloop.counter }}</th>
-                            <td>{{ staff.full_name }}</td>
-                            <td>{{ staff.position }}</td>
-                            <td>{{ staff.email }}</td>
+                            <th>{{ forloop.counter0|add:page_obj.start_index }}</th>
+                            <td class="break-words max-w-xs">{{ staff.full_name }}</td>
+                            <td class="break-words max-w-xs">{{ staff.position }}</td>
+                            <td class="break-words max-w-xs">{{ staff.email }}</td>
                             <td>
                               <div class="flex flex-wrap gap-1">
                                 {% for role in staff.role.all %}
@@ -46,9 +49,8 @@
                                 {% endfor %}
                               </div>
                             </td>
-
                             <td>
-                              <div class="flex gap-2">
+                              <div class="flex gap-2 flex-wrap">
                                 <!-- Edit Button -->
                                 <button class="btn btn-xs btn-ghost p-1 group"
                                     hx-get="/staff/edit/{{ staff.staff_id }}/"
@@ -72,7 +74,6 @@
                                 </button>
                               </div>
                             </td>
-
                           </tr>
                           {% endfor %}
                         </tbody>
@@ -83,26 +84,30 @@
         </div>
     </div>
 
-    {% comment %} pagination {% endcomment %}
-    <div class="flex items-center justify-between mt-6">
-        <a href="#" class="flex items-center px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800">
+    <!-- Pagination Section -->
+    <div class="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
+        <a href="?page={% if page_obj.has_previous %}{{ page_obj.previous_page_number }}{% else %}1{% endif %}" class="flex items-center px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800 {% if not page_obj.has_previous %}pointer-events-none opacity-50{% endif %}">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 rtl:-scale-x-100">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 15.75L3 12m0 0l3.75-3.75M3 12h18" />
             </svg>
             <span>Previous</span>
         </a>
 
-        <div class="items-center hidden lg:flex gap-x-3">
-            <a href="#" class="px-2 py-1 text-sm text-blue-500 rounded-md dark:bg-gray-800 bg-blue-100/60">1</a>
-            <a href="#" class="px-2 py-1 text-sm text-gray-500 rounded-md dark:hover:bg-gray-800 dark:text-gray-300 hover:bg-gray-100">2</a>
-            <a href="#" class="px-2 py-1 text-sm text-gray-500 rounded-md dark:hover:bg-gray-800 dark:text-gray-300 hover:bg-gray-100">3</a>
-            <a href="#" class="px-2 py-1 text-sm text-gray-500 rounded-md dark:hover:bg-gray-800 dark:text-gray-300 hover:bg-gray-100">...</a>
-            <a href="#" class="px-2 py-1 text-sm text-gray-500 rounded-md dark:hover:bg-gray-800 dark:text-gray-300 hover:bg-gray-100">12</a>
-            <a href="#" class="px-2 py-1 text-sm text-gray-500 rounded-md dark:hover:bg-gray-800 dark:text-gray-300 hover:bg-gray-100">13</a>
-            <a href="#" class="px-2 py-1 text-sm text-gray-500 rounded-md dark:hover:bg-gray-800 dark:text-gray-300 hover:bg-gray-100">14</a>
+        <div class="items-center flex flex-wrap gap-x-2 gap-y-1 justify-center">
+            {% for num in paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <a href="?page={{ num }}" class="px-2 py-1 text-sm text-blue-500 rounded-md dark:bg-gray-800 bg-blue-100/60">{{ num }}</a>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a href="?page={{ num }}" class="px-2 py-1 text-sm text-gray-500 rounded-md dark:hover:bg-gray-800 dark:text-gray-300 hover:bg-gray-100">{{ num }}</a>
+                {% elif num == 1 or num == paginator.num_pages %}
+                    <a href="?page={{ num }}" class="px-2 py-1 text-sm text-gray-500 rounded-md dark:hover:bg-gray-800 dark:text-gray-300 hover:bg-gray-100">{{ num }}</a>
+                {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
+                    <span class="px-2 py-1 text-sm text-gray-400">...</span>
+                {% endif %}
+            {% endfor %}
         </div>
 
-        <a href="#" class="flex items-center px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800">
+        <a href="?page={% if page_obj.has_next %}{{ page_obj.next_page_number }}{% else %}{{ paginator.num_pages }}{% endif %}" class="flex items-center px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800 {% if not page_obj.has_next %}pointer-events-none opacity-50{% endif %}">
             <span>Next</span>
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 rtl:-scale-x-100">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />

@@ -1,0 +1,58 @@
+{% extends "layout/base.html" %}
+
+{% block 'sidebar' %}
+{% endblock 'sidebar' %}
+
+{% block 'title' %}Login{% endblock 'title' %}
+
+{% block 'login' %}
+<div id="login-blur-overlay" class="fixed inset-0 z-50 bg-white bg-opacity-0 transition-all duration-500" style="display:none;"></div>
+<div class="relative h-screen bg-gray-50 overflow-hidden px-2 sm:px-0">
+    <div class="absolute top-20 left-2 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-[#D1208A80] rounded-full mix-blend-multiply filter blur-[100px] sm:blur-[150px] opacity-70 animate-blob"></div>
+    <div class="absolute top-20 right-2 sm:right-32 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-[#FFB20080] rounded-full mix-blend-multiply filter blur-[100px] sm:blur-[150px] opacity-70 animate-blob animation-delay-2000"></div>
+    <div class="hidden xl:block absolute bottom-10 left-2 sm:left-32 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-[#FFB20080] rounded-full mix-blend-multiply filter blur-[100px] sm:blur-[150px] opacity-70 animate-blob animation-delay-4000"></div>
+    <div class="absolute bottom-10 right-2 sm:right-52 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-[#CAEEF580] rounded-full mix-blend-multiply filter blur-[100px] sm:blur-[150px] opacity-70 animate-blob animation-delay-4000"></div>
+    <div class="flex min-h-full flex-col justify-center py-8 sm:py-12 sm:px-6 lg:px-8">
+        <div class="sm:mx-auto sm:w-full sm:max-w-md">
+            <h1 class="text-center text-2xl sm:text-4xl font-black">Online Activities Management System</h1>
+        </div>
+
+        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+            <div class="bg-white py-6 sm:py-8 px-2 mx-3 sm:px-10 shadow sm:rounded-lg">
+                {% if error %}
+                    <div class="mb-4 text-red-600 text-center">{{ error }}</div>
+                {% endif %}
+                <form id="login-form" class="space-y-6" action="" method="POST">
+                    {% csrf_token %}
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+                        <div class="mt-1">
+                            <input id="email" name="email" type="email" autocomplete="email" required=""
+                                    class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                        <div class="mt-1">
+                            <input id="password" name="password" type="password" autocomplete="current-password"
+                                    required=""
+                                    class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                        </div>
+                    </div>
+
+                    <div>
+                        <button id="login-btn" type="submit"
+                                class="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Login
+                        </button>
+                    </div>
+                </form>
+
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock 'login' %}
+

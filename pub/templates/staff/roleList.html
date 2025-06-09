@@ -1,39 +1,42 @@
 {% extends "layout/base.html" %}
 
+{% block 'title' %}Roles{% endblock 'title' %}
+
+
 {% block 'content' %}
-<section class="mt-25 container px-8">
+<section class="mt-8 container px-2 sm:px-4 md:px-8">
     <!-- Header Section -->
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
         <div class="flex items-center gap-x-3">
-            <h2 class="text-3xl font-extrabold">Role List</h2>
+            <h2 class="text-2xl sm:text-3xl font-extrabold">Role List</h2>
             <span class="px-3 py-1 text-xs badge badge-primary">{{ roles.count }} roles</span>
         </div>
-        <button class="btn btn-outline btn-primary" onclick="add_role_modal.showModal()">Add Role</button>
+        <button class="btn btn-outline btn-primary w-full sm:w-auto" onclick="add_role_modal.showModal()">Add Role</button>
     </div>
 
     <!-- Table Section -->
     <div class="flex flex-col">
-        <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+        <div class="-mx-2 -my-2 overflow-x-auto sm:-mx-4 md:-mx-6 lg:-mx-8">
             <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
                 <div class="overflow-hidden border border-base-300 dark:border-gray-700 md:rounded-lg">
                     <div class="overflow-x-auto">
-                      <table class="table">
+                      <table class="table w-full text-sm md:text-base">
                         <!-- head -->
                         <thead>
                           <tr>
-                            <th>Role Name</th>
-                            <th>Num. of Staff</th>
-                            <th>Actions</th>
+                            <th class="whitespace-nowrap">Role Name</th>
+                            <th class="whitespace-nowrap">Num. of Staff</th>
+                            <th class="whitespace-nowrap">Actions</th>
                           </tr>
                         </thead>
                         <tbody>
                           {% for role in roles_with_counts %}
                           <tr class="hover:bg-base-300">
-                            <td>{{ role.role }}</td>
-							<td>{{ role.staff_count }}</td>
+                            <td class="break-words max-w-xs">{{ role.role }}</td>
+                            <td class="break-words max-w-xs">{{ role.staff_count }}</td>
 
                             <td>
-                              <div class="flex gap-2">
+                              <div class="flex gap-2 flex-wrap">
                                 <!-- Edit Button -->
                                 <button class="btn btn-xs btn-ghost p-1 group"
                                     hx-get="/roles/edit/{{ role.role_id }}/"

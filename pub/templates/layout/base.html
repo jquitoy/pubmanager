@@ -13,6 +13,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.2.1/dist/chart.umd.min.js"></script> 
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static "apple-touch-icon.png" %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static "favicon-32x32.png" %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static "favicon-16x16.png" %}">
+    <link rel="manifest" href="/site.webmanifest">
+
     
 
     <title>{% block 'title' %} {% endblock 'title' %}</title>
@@ -26,6 +31,7 @@
     </script>
 </head>
 <body class="overflow-x-hidden">
+    {% block 'sidebar' %}
     <!-- Mobile sidebar open button -->
     <button id="sidebar-open-btn" class="fixed top-4 left-4 z-40 p-2 rounded-md bg-gray-800 text-white md:hidden focus:outline-none focus:ring-2 focus:ring-gray-400">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -33,12 +39,14 @@
         </svg>
     </button>
     <div class="flex min-h-screen">
-        {% include "include/sidebar.html" %}
+            {% include "include/sidebar.html" %}
         <div class="flex-1 md:ml-64 px-4" style="background-color: var(--color-base-100);">
             {% block 'content' %}{% endblock 'content' %}
         </div>
     </div>
+    {% endblock 'sidebar' %}
 
+    {% block 'login' %}{% endblock 'login' %}
 
 
     <script>

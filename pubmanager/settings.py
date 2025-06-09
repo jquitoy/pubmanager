@@ -131,3 +131,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # For Tailwind (recommended for your setup)
 CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
 CRISPY_TEMPLATE_PACK = "tailwind"
+
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/calendar/'  # or your desired default page

@@ -6,19 +6,56 @@ from .forms import RoleForm, StaffForm, TaskWithAssignmentForm
 from .models import Roles, Staffs, Tasks, Assignments
 from django.db.models import Count
 from django.core.serializers.json import DjangoJSONEncoder
+from django.core.paginator import Paginator
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 
 
 # Create your views here.
-def index(request):
-    return render(request, 'users/usersList.html')
+def login_view(request):
+    error = None
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        # Django's default User uses username, not email, so we must look up the username
+        try:
+            user = User.objects.get(email=email)
+            username = user.username
+        except User.DoesNotExist:
+            username = None
+        if username:
+            user = authenticate(request, username=username, password=password)
+            if user is not None and user.is_superuser:
+                login(request, user)
+                return redirect('calendar')
+            else:
+                error = 'Invalid credentials or not a superuser.'
+        else:
+            error = 'Invalid credentials or not a superuser.'
+    return render(request, 'login.html', {'error': error})
 
+def logout_view(request):
+    logout(request)
+    return redirect('login')
+
+@login_required
 def staff_list(request):
-    staffs = Staffs.objects.all()
+    staffs = Staffs.objects.all().order_by('staff_id')
     roles = Roles.objects.all()
 
+    # Pagination logic
+    page_number = request.GET.get('page', 1)
+    paginator = Paginator(staffs, 5)  # 10 staff per page
+    page_obj = paginator.get_page(page_number)
+    staffCount = Staffs.objects.all().count()
+
     data = {
-        'staffs': staffs,
-        'roles': roles,  # Add this line
+        'staffCount': staffCount,
+        'staffs': page_obj.object_list,
+        'roles': roles,
+        'page_obj': page_obj,
+        'paginator': paginator,
     }
 
     if request.method == 'POST':
@@ -32,17 +69,22 @@ def staff_list(request):
             position = position,
             email = email,
         )
-        # Assuming Staffs has a ManyToManyField to Roles named 'role'
         staff.role.set(roles_selected)
         staff.save()
 
+        # Re-paginate after adding
+        staffs = Staffs.objects.all().order_by('staff_id')
+        paginator = Paginator(staffs, 5)
+        page_obj = paginator.get_page(1)
+        data['staffs'] = page_obj.object_list
+        data['page_obj'] = page_obj
+        data['paginator'] = paginator
+
         return render(request, 'staff/staffList.html', data)
-
-
-        
 
     return render(request, 'staff/staffList.html', data)
 
+@login_required
 def staff_add(request):
     if request.method == 'POST':
         form = StaffForm(request.POST)
@@ -53,6 +95,7 @@ def staff_add(request):
         form = StaffForm()
     return render(request, 'staff/staffAdd.html', {'form': form})
 
+@login_required
 def staff_edit(request, staffId):
     staff = get_object_or_404(Staffs, pk=staffId)
     roles = Roles.objects.all()
@@ -87,6 +130,7 @@ def staff_edit(request, staffId):
     else:
         return render(request, "staff/staffEdit.html", {"staff": staff, "roles": roles})
     
+@login_required
 def staff_delete(request, staffId):
 
     try:
@@ -112,6 +156,7 @@ def staff_delete(request, staffId):
     except Exception as e:
         return HttpResponse(f'Error occured during delete gender: {e}')
 
+@login_required
 def role_list(request):
     try:
         roles = Roles.objects.all()
@@ -138,6 +183,7 @@ def role_list(request):
         return HttpResponse(f'Error occured during load Roles: {e}')
 
 
+@login_required
 def role_add(request):
     try:
         if request.method == 'POST':
@@ -152,6 +198,7 @@ def role_add(request):
     except Exception as e:
         return HttpResponse(f'Error occured during add gender: {e}')
     
+@login_required
 def role_edit(request, roleId):
     try:
         roleObj = Roles.objects.get(pk=roleId)
@@ -175,6 +222,7 @@ def role_edit(request, roleId):
         return HttpResponse(f'Error occured during edit')
     
 
+@login_required
 def role_delete(request, roleId):
 
     try:
@@ -200,6 +248,7 @@ def role_delete(request, roleId):
     
 
 
+@login_required
 def task_add(request):
     if request.method == 'POST':
         form = TaskWithAssignmentForm(request.POST)
@@ -220,16 +269,19 @@ def task_add(request):
         form = TaskWithAssignmentForm()
     return render(request, 'task/taskAdd.html', {'form': form})
 
+@login_required
 def load_staffs(request):
     role_id = request.GET.get('role')
     staffs = Staffs.objects.filter(role=role_id)
     return render(request, 'staff/staffOptions.html', {'staffs': staffs})
 
 
+@login_required
 def get_staff_form(request, staff_id):
     staff = get_object_or_404(Staffs, id=staff_id)
     return render(request, 'staff/staffList.html', {'staff': staff})
 
+@login_required
 def calendar(request):
     tasks = Tasks.objects.all()
     assignments = Assignments.objects.all()
@@ -377,6 +429,7 @@ def calendar(request):
 
     return render(request, 'task/calendar.html', data)
 
+@login_required
 def task_edit(request, taskId):
     task = get_object_or_404(Tasks, pk=taskId)
     assignments = Assignments.objects.filter(task=task)
@@ -420,6 +473,7 @@ def task_edit(request, taskId):
 
 #     return render(request, 'dashboard/dashboard.html', data)
 
+@login_required
 def dashboard(request):
     staffs = Staffs.objects.all().order_by('staff_id')
     staff_names = [s.full_name for s in staffs]
