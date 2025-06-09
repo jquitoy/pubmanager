@@ -89,7 +89,11 @@
     <!-- Second row: Content -->
     <div class="flex flex-col gap-3 overflow-y-auto max-h-full">
       <div class="sticky top-0 z-10 bg-base-100 pb-2">
-        <h1 class="text-2xl font-bold">Pending Tasks</h1>
+        {% if taskPendingCount %}
+          <h1 class="text-2xl font-bold">Pending Tasks</h1>
+        {% else %}
+          <h1 class="text-2xl font-bold">No Pending Tasks</h1>
+        {% endif %}
       </div>
 
       {% for item in tasksPendingWithStaff %}
@@ -163,7 +167,7 @@
       document.querySelector('#edit_task_modal [name="task_type"]').value = event.extendedProps.task_type || '';
       document.querySelector('#edit_task_modal [name="task_id"]').value = event.id || '';
       //document.querySelector('#edit_task_modal [name="status"]').value = event.extendedProps.status || '';
-      document.querySelector('#edit_task_modal [name="status"]').value = event.extendedProps.task_type || '';
+      //document.querySelector('#edit_task_modal [name="status"]').value = event.extendedProps.status || '';
 
       // Ensure the status dropdown is updated visually (for DaisyUI or custom select)
       const statusSelect = document.querySelector('#edit_task_modal [name="status"]');

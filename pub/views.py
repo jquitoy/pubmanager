@@ -235,10 +235,10 @@ def calendar(request):
     assignments = Assignments.objects.all()
     roles = Roles.objects.all()
     staffs = Staffs.objects.all()
-    tasksPending = Tasks.objects.filter(status='WORKING').order_by('deadline')
+    tasksPending = Tasks.objects.filter(status='PENDING').order_by('deadline')
 
     taskPostedCount = Tasks.objects.filter(status='POSTED').count()
-    taskPendingCount = Tasks.objects.filter(status='WORKING').count()
+    taskPendingCount = Tasks.objects.filter(status='PENDING').count()
     taskMissedCount = Tasks.objects.filter(status='MISSED').count()
 
 
@@ -276,7 +276,7 @@ def calendar(request):
 
     # Compute abbreviated staff names for each task
     from collections import defaultdict
-    tasksPending = Tasks.objects.filter(status='WORKING').order_by('deadline')
+    tasksPending = Tasks.objects.filter(status='PENDING').order_by('deadline')
     tasks_pending_with_staff = []
     for task in tasksPending:
         # Get all assignments for this task, sorted by staff full name
@@ -331,7 +331,7 @@ def calendar(request):
         task_type = request.POST.get('task_type')
         deadline = request.POST.get('deadline')
         description = request.POST.get('description')
-        status = request.POST.get('status') or 'WORKING'
+        status = request.POST.get('status') or 'PENDING'
         roles_selected = request.POST.getlist('role[]')
         staffs_selected = request.POST.getlist('staff[]')
         if 'delete_task' in request.POST and task_id:
@@ -398,32 +398,38 @@ def task_edit(request, taskId):
 
     return render(request, 'task/taskEdit.html', {'task': task, 'assignments': assignments})
 
-def report(request):
-    tasks = Tasks.objects.all()
-    assignments = Assignments.objects.all()
-    roles = Roles.objects.all()
-    staffs = Staffs.objects.all()
+# def report(request):
+#     tasks = Tasks.objects.all()
+#     assignments = Assignments.objects.all()
+#     roles = Roles.objects.all()
+#     staffs = Staffs.objects.all()
 
-    taskPostedCount = Tasks.objects.filter(status='POSTED').count()
-    taskPendingCount = Tasks.objects.filter(status='WORKING').count()
-    taskMissedCount = Tasks.objects.filter(status='MISSED').count()
+#     taskPostedCount = Tasks.objects.filter(status='POSTED').count()
+#     taskPendingCount = Tasks.objects.filter(status='PENDING').count()
+#     taskMissedCount = Tasks.objects.filter(status='MISSED').count()
 
-    data = {
-        'tasks': tasks,
-        'assignments': assignments,
-        'roles': roles,
-        'staffs': staffs,
-        "taskPostedCount": taskPostedCount,
-        "taskPendingCount": taskPendingCount,
-        "taskMissedCount": taskMissedCount,
-    }
+#     data = {
+#         'tasks': tasks,
+#         'assignments': assignments,
+#         'roles': roles,
+#         'staffs': staffs,
+#         "taskPostedCount": taskPostedCount,
+#         "taskPendingCount": taskPendingCount,
+#         "taskMissedCount": taskMissedCount,
+#     }
 
-    return render(request, 'dashboard/dashboard.html', data)
+#     return render(request, 'dashboard/dashboard.html', data)
 
 def dashboard(request):
     staffs = Staffs.objects.all().order_by('staff_id')
     staff_names = [s.full_name for s in staffs]
-    pendingTotal = Tasks.objects.filter(status='WORKING').count()
+    pendingTotal = Tasks.objects.filter(status='PENDING').count()
+
+    taskPostedCount = Tasks.objects.filter(status='POSTED').count()
+    taskPendingCount = Tasks.objects.filter(status='PENDING').count()
+    taskMissedCount = Tasks.objects.filter(status='MISSED').count()
+    taskTotal = Tasks.objects.exclude(status='CANCELLED').count()
+
     # For each staff, count tasks by status
     posted_counts = []
     pending_counts = []
@@ -431,7 +437,7 @@ def dashboard(request):
     for staff in staffs:
         assignments = Assignments.objects.filter(staff=staff)
         posted = assignments.filter(task__status='POSTED').count()
-        pending = assignments.filter(task__status='WORKING').count()
+        pending = assignments.filter(task__status='PENDING').count()
         missed = assignments.filter(task__status='MISSED').count()
         posted_counts.append(posted)
         pending_counts.append(pending)
@@ -456,5 +462,11 @@ def dashboard(request):
         'pendingCounts': pending_counts,    
         'missedCounts': missed_counts,
         'pendingTotal': pendingTotal,
+        # New context for tasks progress bar
+        'tasks_posted': taskPostedCount,
+        'tasks_pending': taskPendingCount,
+        'tasks_missed': taskMissedCount,
+        'tasks_total': taskTotal,
+
     }
     return render(request, 'dashboard/dashboard.html', data)

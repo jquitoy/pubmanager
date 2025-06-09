@@ -27,7 +27,7 @@
   opacity: 0.5;
   text-decoration: line-through;
 }
-.event-WORKING {
+.event-PENDING {
   background-color:  #f1c40f  ; /* Tailwind yellow-200 */
   color: #70340f !important; /* Tailwind yellow-900 */
 }

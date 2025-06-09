@@ -13,13 +13,20 @@
     </div>
   </div>
 
-  <div class="border rounded-2xl border-base-300 shadow-2xl h-[475px] w-full flex flex-col items-center justify-center">
-    <h1 class="text-3xl font-bold text-center my-3">Overall Progress</h1>
-    <div class="flex items-center justify-center w-full h-[400px]">
-      <canvas id="progressBar"></canvas>
-    </div>
-  </div>
-
+   <div class="border rounded-2xl border-base-300 shadow-2xl h-[475px] w-full flex flex-col items-center justify-center">
+      <h1 class="text-3xl font-bold text-center my-3">Tasks Progress</h1>
+      <div id="tasksProgressBar" class="w-full flex flex-col items-center justify-center flex-1">
+        <div class="flex-1 flex items-center justify-center w-full">
+          <div id="tasksProgressChart"></div>
+        </div>
+        <div class="mt-8 w-full flex flex-row gap-5 items-start justify-items-center mb-3">
+          <div class="flex-1 text-center">Total<br><span class='font-bold text-lg'>{{ tasks_total }}</span></div>
+          <div class="flex-1 text-center">Completed<br><span class='font-bold text-lg text-green-600'>{{ tasks_posted }}</span></div>
+          <div class="flex-1 text-center">Pending<br><span class='font-bold text-lg text-yellow-600'>{{ tasks_pending }}</span></div>
+          <div class="flex-1 text-center">Missed<br><span class='font-bold text-lg text-red-600'>{{ tasks_missed }}</span></div>
+        </div>
+      </div>
+  </div> 
 </div>
 
 
@@ -28,7 +35,6 @@
     <h1 class="text-5xl font-bold text-center mb-5">Staff Task Status</h1>
 	<canvas id="staffStatus" style="width:100%; min-width:600px; height:675px;"></canvas>
 </div>
-
 
 
 <script>
@@ -109,40 +115,179 @@ let roleChart = new Chart(roleBreakdown, {
     }
   }
 });
-/* let progress = document.getElementById("progressBar").getContext("2d");
-
-let progressBar = new Chart(progress, {
-  type: "bar",
-    data: {
-      labels: {{ staff_names|safe }},
-      datasets: [
-          {
-            label: "Posted",
-            backgroundColor: "#1e8449",
-            data: {{ posted_counts|safe }}
-          },
-          {
-            label: "Pending",
-            backgroundColor: "#f1c40f ",
-            data: {{ pending_counts|safe }}
-          },
-          {
-            label: "Missed",
-            backgroundColor: "#c0392b",
-            data: {{ missed_counts|safe }}
-          }
-      ]
-    },
-    options: {
-        responsive: false,
-        maintainAspectRatio: false,
-        indexAxis: 'y',
-    }
-  }
-) */
 </script>
 
+<script>
+// Tasks Progress Bar - Render on DOMContentLoaded
+// Use the direct integer values from the context, not arrays
+// tasks_posted, tasks_pending, tasks_missed are integers
 
+document.addEventListener("DOMContentLoaded", function() {
+  // DEBUG: Log the context variables to check their values and types
+  console.log('tasks_posted:', "{{ tasks_posted }}");
+  console.log('tasks_pending:', "{{ tasks_pending }}");
+  console.log('tasks_missed:', "{{ tasks_missed }}");
+
+  // Use the correct context variables (integers)
+  const totalTasksPosted = Number("{{ tasks_posted }}");
+  const totalTasksPending = Number("{{ tasks_pending }}");
+  const totalTasksMissed = Number("{{ tasks_missed }}");
+  const totalTasks = totalTasksPosted + totalTasksPending ;
+  const totalAllTasks = totalTasksPosted + totalTasksPending +totalTasksMissed ;
+
+
+  // DEBUG: Log the computed totals
+  console.log('totalTasksPosted:', totalTasksPosted);
+  console.log('totalTasksPending:', totalTasksPending);
+  console.log('totalTasksMissed:', totalTasksMissed);
+  console.log('totalTasks:', totalTasks);
+
+  // Tasks Progress: percent of completed (posted) out of all tasks
+  const tasksProgress = totalTasks > 0 ? ((totalTasksPosted / totalTasks) * 100).toFixed(2) : 0;
+  console.log('tasksProgress:', tasksProgress);
+
+  // Update the Tasks metric labels
+  const tasksLabelDivs = document.querySelectorAll('#tasksProgressBar .mt-8 > div');
+  if (tasksLabelDivs.length === 4) {
+    tasksLabelDivs[0].innerHTML = `Total<br><span class='font-bold text-lg'>${totalAllTasks}</span>`;
+    tasksLabelDivs[1].innerHTML = `Completed<br><span class='font-bold text-lg text-green-600'>${totalTasksPosted}</span>`;
+    tasksLabelDivs[2].innerHTML = `Pending<br><span class='font-bold text-lg text-yellow-600'>${totalTasksPending}</span>`;
+    tasksLabelDivs[3].innerHTML = `Missed<br><span class='font-bold text-lg text-red-600'>${totalTasksMissed}</span>`;
+  }
+
+  // Render Tasks Progress radial bar chart (only progress, no missed)
+  if (typeof ApexCharts !== 'undefined') {
+    // Function to get the correct value color based on theme controller
+    function getValueColor() {
+      // Check for sidebar theme controller (checkbox or toggle)
+      const themeController = document.querySelector('[data-toggle-theme] input[type="checkbox"], [data-toggle-theme] input[type="radio"]');
+      if (themeController && themeController.checked) {
+        // If checked, set a manual color (e.g., white or a custom color)
+        return '#fff'; // You can change this to your preferred color
+      }
+      // Otherwise, use DaisyUI's --base-content
+      return getComputedStyle(document.documentElement).getPropertyValue('--base-content') || '';
+    }
+
+    const tasksChartOptions = {
+      series: [parseFloat(tasksProgress)],
+      colors: ["#28a745"],
+      chart: {
+        fontFamily: "Outfit, sans-serif",
+        type: "radialBar",
+        height: 750,
+        sparkline: {
+          enabled: true,
+        },
+      },
+      plotOptions: {
+        radialBar: {
+          startAngle: 0,
+          endAngle: 360,
+          hollow: {
+            size: "75%",
+          },
+          track: {
+            background: "#E4E7EC",
+            strokeWidth: "100%",
+            margin: 5,
+          },
+          dataLabels: {
+            name: { show: false },
+            value: {
+              fontSize: "50px",
+              fontWeight: "700",
+              offsetY: 20,
+              color: getValueColor(),
+              formatter: function (val) {
+                return val + "%";
+              },
+            },
+          },
+        },
+      },
+      fill: { type: "solid", colors: ["#28a745"] },
+      stroke: { lineCap: "round" },
+      labels: ["Tasks Progress"],
+    };
+
+    const tasksChartEl = document.querySelector("#tasksProgressChart");
+    // Clear the chart container before rendering
+    if (tasksChartEl) {
+      tasksChartEl.innerHTML = "";
+      if (tasksChartEl._apexchart) {
+        tasksChartEl._apexchart.destroy();
+      }
+      const tasksChart = new ApexCharts(tasksChartEl, tasksChartOptions);
+      tasksChart.render();
+      tasksChartEl._apexchart = tasksChart;
+
+      // Listen for theme changes (sidebar controller)
+      const themeController = document.querySelector('[data-toggle-theme] input[type="checkbox"], [data-toggle-theme] input[type="radio"]');
+      if (themeController) {
+        themeController.addEventListener('change', function() {
+          // Update the value color on theme change
+          tasksChart.updateOptions({
+            plotOptions: {
+              radialBar: {
+                dataLabels: {
+                  value: {
+                    color: getValueColor(),
+                  }
+                }
+              }
+            }
+          });
+        });
+      }
+    }
+  } else {
+    console.error('ApexCharts is not loaded.');
+  }
+
+  // --- THEME CONTROLLER LOGIC ---
+  // Assumes the sidebar theme controller is a checkbox with id 'theme-controller' or similar
+  // Adjust selector as needed for your actual sidebar theme toggle
+  function updateChartValueColor() {
+    const themeController = document.querySelector('#theme-controller');
+    let valueColor;
+    if (themeController && themeController.checked) {
+      // If toggled ON (e.g., dark mode), set color manually (white)
+      valueColor = '#fff';
+    } else {
+      // Otherwise, use DaisyUI base-content variable
+      valueColor = getComputedStyle(document.documentElement).getPropertyValue('--base-content') || '#222';
+    }
+    if (tasksChart) {
+      tasksChart.updateOptions({
+        plotOptions: {
+          radialBar: {
+            dataLabels: {
+              value: {
+                color: valueColor
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+
+  // Listen for theme controller changes
+  const themeController = document.querySelector('#theme-controller');
+  if (themeController) {
+    themeController.addEventListener('change', updateChartValueColor);
+  }
+
+  // Also observe changes to the html[data-theme] attribute (for DaisyUI theme changes)
+  const htmlEl = document.documentElement;
+  const observer = new MutationObserver(updateChartValueColor);
+  observer.observe(htmlEl, { attributes: true, attributeFilter: ['data-theme'] });
+
+  // Initial color set
+  setTimeout(updateChartValueColor, 100);
+});
+</script>
 
 {% endblock 'content' %}
 
