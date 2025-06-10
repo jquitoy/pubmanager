@@ -327,7 +327,7 @@ document.body.addEventListener('htmx:afterSettle', initStaffRoleModals);
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  const makeWebhookUrl = "https://hook.us2.make.com/3iaatx856bft7bjcqtgjynfp3li3txwx";
+  const makeWebhookUrl = "https://hook.us2.make.com/u1lim7ga3y77ppzajhkc845lropo2cvt";
   const addTaskForm = document.querySelector('#add_task_modal form');
   const editTaskForm = document.querySelector('#edit_task_modal form');
   
@@ -340,6 +340,25 @@ document.addEventListener('DOMContentLoaded', function() {
       isSubmittingToMake = true;
 
       try {
+        // Build the staff-role summary
+        let staffRoleSummary = '';
+        addTaskForm.querySelectorAll('.staff-role-row').forEach(row => {
+          const roleSelect = row.querySelector('.role-select');
+          const staffSelect = row.querySelector('.staff-select');
+          const roleName = roleSelect.options[roleSelect.selectedIndex]?.text?.trim();
+          const staffName = staffSelect.options[staffSelect.selectedIndex]?.text?.trim();
+          if (roleName && staffName && staffName !== 'Select Staff') {
+            staffRoleSummary += `${roleName} - ${staffName}\n`;
+          }
+        });
+
+        // Get user's original description
+        const descriptionInput = addTaskForm.querySelector('[name="description"]');
+        let userDesc = descriptionInput ? descriptionInput.value.trim() : '';
+        
+        // Combine user description and staff-role summary for Make.com payload
+        const combinedDescriptionForMake = userDesc ? (userDesc + '\n\n' + staffRoleSummary) : staffRoleSummary;
+
         const formData = new FormData(addTaskForm);
         const roles = [];
         const attendees = [];
@@ -356,10 +375,30 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         });
 
+        // Get task type for Make.com payload (using label instead of value)
+        const taskTypeSelect = addTaskForm.querySelector('[name="task_type"]');
+        const taskTypeForMake = taskTypeSelect ? taskTypeSelect.options[taskTypeSelect.selectedIndex]?.text?.trim() : '';
+
+        let finalDescriptionForMake = '';
+        if (taskTypeForMake) {
+            finalDescriptionForMake += taskTypeForMake.toUpperCase();
+        }
+
+        let userDescForMake = descriptionInput ? descriptionInput.value.trim() : '';
+        if (userDescForMake) {
+            if (finalDescriptionForMake) finalDescriptionForMake += '\n';
+            finalDescriptionForMake += userDescForMake;
+        }
+
+        if (staffRoleSummary) {
+            if (finalDescriptionForMake) finalDescriptionForMake += '\n\n';
+            finalDescriptionForMake += staffRoleSummary;
+        }
+
         const data = {
           action: 'create',
           title: formData.get('title'),
-          description: formData.get('description'),
+          description: finalDescriptionForMake, // Use combined description for Make.com
           deadline: formData.get('deadline'),
           task_type: formData.get('task_type'),
           status: formData.get('status'),
@@ -446,6 +485,41 @@ document.addEventListener('DOMContentLoaded', function() {
           editTaskForm.submit();
           return;
         } else {
+          // Build the staff-role summary
+          let staffRoleSummary = '';
+          editTaskForm.querySelectorAll('.staff-role-row').forEach(row => {
+            const roleSelect = row.querySelector('.role-select');
+            const staffSelect = row.querySelector('.staff-select');
+            const roleName = roleSelect.options[roleSelect.selectedIndex]?.text?.trim();
+            const staffName = staffSelect.options[staffSelect.selectedIndex]?.text?.trim();
+            if (roleName && staffName && staffName !== 'Select Staff') {
+              staffRoleSummary += `${roleName} - ${staffName}\n`;
+            }
+          });
+          
+          // Get user's original description
+          const descriptionInput = editTaskForm.querySelector('[name="description"]');
+          let userDesc = descriptionInput ? descriptionInput.value.trim() : '';
+
+          // Get task type for Make.com payload (using label instead of value)
+          const taskTypeSelect = editTaskForm.querySelector('[name="task_type"]');
+          const taskTypeForMake = taskTypeSelect ? taskTypeSelect.options[taskTypeSelect.selectedIndex]?.text?.trim() : '';
+
+          let finalDescriptionForMake = '';
+          if (taskTypeForMake) {
+              finalDescriptionForMake += taskTypeForMake.toUpperCase();
+          }
+
+          if (userDesc) {
+              if (finalDescriptionForMake) finalDescriptionForMake += '\n';
+              finalDescriptionForMake += userDesc;
+          }
+
+          if (staffRoleSummary) {
+              if (finalDescriptionForMake) finalDescriptionForMake += '\n\n';
+              finalDescriptionForMake += staffRoleSummary;
+          }
+
           const roles = [];
           const attendees = [];
           
@@ -465,7 +539,7 @@ document.addEventListener('DOMContentLoaded', function() {
             action: 'edit',
             task_id: googleEventId,
             title: formData.get('title'),
-            description: formData.get('description'),
+            description: finalDescriptionForMake, // Use combined description for Make.com
             deadline: formData.get('deadline'),
             task_type: formData.get('task_type'),
             status: formData.get('status'),

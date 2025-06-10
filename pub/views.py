@@ -380,10 +380,10 @@ def calendar(request):
 
     if request.method == 'POST':
         task_id = request.POST.get('task_id')
+        description = request.POST.get('description')
         title = request.POST.get('title')
         task_type = request.POST.get('task_type')
         deadline = request.POST.get('deadline')
-        description = request.POST.get('description')
         status = request.POST.get('status') or 'PENDING'
         roles_selected = request.POST.getlist('role[]')
         staffs_selected = request.POST.getlist('staff[]')
