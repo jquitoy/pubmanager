@@ -6,7 +6,7 @@
 }
 
 @plugin "daisyui" {
-  themes: bumblebee --default, dark --prefersdark;
+  themes: bumblebee --default, forest, dark --prefersdark;
 }
 
 @layer base {
