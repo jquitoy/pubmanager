@@ -4,6 +4,7 @@
         <form method="post" action="/calendar/">
         {% csrf_token %}
         <input type="hidden" name="task_id" id="edit-task-id">
+        <input type="hidden" name="action" id="edit_action_input" value="">
         <div class="form-control mb-4">
             <label for="title" class="label">
             <span class="label-text font-semibold">Title</span>

@@ -414,23 +414,37 @@ document.addEventListener('DOMContentLoaded', function() {
         const googleEventId = formData.get('google_event_id');
 
         if (isDelete) {
-          const data = {
-            task_id: formData.get('task_id'),
-            action: 'delete',
-            google_event_id: googleEventId,
-          };
-
-          await fetch(makeWebhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-          }).catch(err => {
+          let makeDeleteSuccess = false;
+          try {
+            const response = await fetch(makeWebhookUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                task_id: formData.get('task_id'),
+                action: 'delete',
+                google_event_id: googleEventId,
+              })
+            });
+            makeDeleteSuccess = response.ok;
+            if (!makeDeleteSuccess) {
+              console.error('[Make.com DELETE] Non-200 response:', await response.text());
+            }
+          } catch (err) {
             console.error('[Make.com DELETE] Error:', err);
-          });
-
+          }
+          // Set the action field to 'delete' before submitting to Django
+          let actionInput = editTaskForm.querySelector('[name="action"]');
+          if (!actionInput) {
+            actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            editTaskForm.appendChild(actionInput);
+          }
+          actionInput.value = 'delete';
           editTaskForm.removeAttribute('data-delete');
           document.getElementById('edit_task_modal').close();
           editTaskForm.submit();
+          return;
         } else {
           const roles = [];
           const attendees = [];
