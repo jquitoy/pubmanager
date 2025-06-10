@@ -297,7 +297,7 @@ def calendar(request):
     staff_by_role = {}
     for role in roles:
         staff_by_role[role.role_id] = [
-            {'id': staff.staff_id, 'name': staff.full_name}
+            {'id': staff.staff_id, 'name': staff.full_name, 'email': staff.email}
             for staff in staffs.filter(role=role)
         ]
 
@@ -315,6 +315,7 @@ def calendar(request):
                 "description": task.description,
                 "task_type": task.task_type,
                 "status": task.status,
+                "google_event_id": task.google_event_id,
                 "assignments": [
                     {
                         "staff_id": assignment.staff.staff_id,
@@ -386,10 +387,18 @@ def calendar(request):
         status = request.POST.get('status') or 'PENDING'
         roles_selected = request.POST.getlist('role[]')
         staffs_selected = request.POST.getlist('staff[]')
-        if 'delete_task' in request.POST and task_id:
-            # Delete task and its assignments
-            Tasks.objects.filter(pk=task_id).delete()
-            Assignments.objects.filter(task_id=task_id).delete()
+        google_event_id = request.POST.get('google_event_id')
+        print('should delete after')
+        if request.POST.get('action') == 'delete' and task_id:
+            try:
+                task_id_int = int(task_id)
+            except ValueError:
+                print("task_id is not an integer:", task_id)
+                return redirect('/calendar')
+            print("Attempting to delete task with id:", task_id_int)
+            print("Tasks matching:", Tasks.objects.filter(pk=task_id_int))
+            Tasks.objects.filter(pk=task_id_int).delete()
+            Assignments.objects.filter(task_id=task_id_int).delete()
             return redirect('/calendar')
         if task_id:
             # Edit existing task
@@ -399,6 +408,11 @@ def calendar(request):
             task.deadline = deadline
             task.description = description
             task.status = status
+            if google_event_id:
+                task.google_event_id = google_event_id
+            else:
+                # If not present, clear it
+                task.google_event_id = None
             task.save()
             # Remove old assignments and add new
             Assignments.objects.filter(task=task).delete()
@@ -417,6 +431,7 @@ def calendar(request):
                 deadline=deadline,
                 description=description,
                 status=status,
+                google_event_id=google_event_id
             )
             for role_id, staff_id in zip(roles_selected, staffs_selected):
                 if role_id and staff_id:

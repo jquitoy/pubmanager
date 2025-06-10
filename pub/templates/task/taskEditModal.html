@@ -1,7 +1,7 @@
 <dialog id="edit_task_modal" class="modal">
     <div id="edit-task-modal-content" class="modal-box max-h-[656px]">
         <h2 class="text-2xl font-bold mb-6 text-center">Edit Task</h2>
-        <form method="post">
+        <form method="post" action="/calendar/">
         {% csrf_token %}
         <input type="hidden" name="task_id" id="edit-task-id">
         <div class="form-control mb-4">

@@ -1,8 +1,8 @@
-{% extends "layout/base.html" %}
-{% load static %}
+{% extends "layout/base.html" %} 
 
-{% block 'title' %}Calendar{% endblock 'title' %}
+{% load static %} 
 
+{% block 'title'%}Calendar{%endblock 'title' %} 
 
 {% block 'content' %}
 
@@ -13,7 +13,7 @@
       <div class="flex h-12 w-12 items-center justify-center rounded-xl text-success">
 	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-9 text-success">
 		<path fill-rule="evenodd" d="M9 1.5H5.625c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5Zm6.61 10.936a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 14.47a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" />
-	<path d="M12.971 1.816A5.23 5.23 0 0 1 14.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 0 1 3.434 1.279 9.768 9.768 0 0 0-6.963-6.963Z" />
+		<path d="M12.971 1.816A5.23 5.23 0 0 1 14.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 0 1 3.434 1.279 9.768 9.768 0 0 0-6.963-6.963Z" />
 	</svg>
 
 
@@ -155,8 +155,16 @@
       document.querySelector('#edit_task_modal [name="description"]').value = event.extendedProps.description || '';
       document.querySelector('#edit_task_modal [name="task_type"]').value = event.extendedProps.task_type || '';
       document.querySelector('#edit_task_modal [name="task_id"]').value = event.id || '';
-      //document.querySelector('#edit_task_modal [name="status"]').value = event.extendedProps.status || '';
-      //document.querySelector('#edit_task_modal [name="status"]').value = event.extendedProps.status || '';
+      // Set google_event_id in the edit form if present
+      let googleEventId = event.extendedProps.google_event_id || '';
+      let googleEventInput = document.querySelector('#edit_task_modal [name="google_event_id"]');
+      if (!googleEventInput) {
+        googleEventInput = document.createElement('input');
+        googleEventInput.type = 'hidden';
+        googleEventInput.name = 'google_event_id';
+        document.querySelector('#edit_task_modal form').appendChild(googleEventInput);
+      }
+      googleEventInput.value = googleEventId;
 
       // Ensure the status dropdown is updated visually (for DaisyUI or custom select)
       const statusSelect = document.querySelector('#edit_task_modal [name="status"]');
@@ -222,7 +230,6 @@
       if (arg.event.extendedProps && arg.event.extendedProps.status) {
         const status = arg.event.extendedProps.status;
         const className = 'event-' + status.replace(/_/g, '_');
-        console.log('[eventClassNames] status:', status, 'class:', className, arg.event);
         classes.push(className);
       }
       return classes;
@@ -243,6 +250,7 @@
   calendar.render();
 });
 </script>
+
 
 
 <script>
@@ -314,10 +322,163 @@ function initStaffRoleModals() {
 }
 document.addEventListener('DOMContentLoaded', initStaffRoleModals);
 document.body.addEventListener('htmx:afterSettle', initStaffRoleModals);
+</script>
 {% comment %} tasks for calendar {% endcomment %}
 
-</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const makeWebhookUrl = "https://hook.us2.make.com/3iaatx856bft7bjcqtgjynfp3li3txwx";
+  const addTaskForm = document.querySelector('#add_task_modal form');
+  const editTaskForm = document.querySelector('#edit_task_modal form');
+  
+  if (addTaskForm) {
+    let isSubmittingToMake = false;
+    console.log('[Make.com ADD] Handler attached:', addTaskForm);
+    addTaskForm.addEventListener('submit', async function(e) {
+      if (isSubmittingToMake) return;
+      e.preventDefault();
+      isSubmittingToMake = true;
 
+      try {
+        const formData = new FormData(addTaskForm);
+        const roles = [];
+        const attendees = [];
+        
+        addTaskForm.querySelectorAll('.staff-role-row').forEach(row => {
+          const role = row.querySelector('.role-select')?.value;
+          const staff = row.querySelector('.staff-select')?.value;
+          if (role && staff) {
+            roles.push({ role_id: role, staff_id: staff });
+            const staffObj = (staffData[role] || []).find(s => String(s.id) === String(staff));
+            if (staffObj && staffObj.email && !attendees.some(a => a.email === staffObj.email)) {
+              attendees.push({ email: staffObj.email });
+            }
+          }
+        });
+
+        const data = {
+          action: 'create',
+          title: formData.get('title'),
+          description: formData.get('description'),
+          deadline: formData.get('deadline'),
+          task_type: formData.get('task_type'),
+          status: formData.get('status'),
+          google_event_id: formData.get('google_event_id'),
+          assignments: roles,
+          attendees: attendees
+        };
+
+        let googleEventIdFromMake = '';
+        try {
+          const response = await fetch(makeWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          const json = await response.json();
+          googleEventIdFromMake = json.google_event_id;
+        } catch (err) {
+          console.error('[Make.com ADD] Error:', err);
+        }
+        if (googleEventIdFromMake) {
+          addTaskForm.querySelector('[name="google_event_id"]').value = googleEventIdFromMake;
+        }
+        addTaskForm.submit();
+      } catch (err) {
+        console.error('[Make.com ADD] Error:', err);
+        isSubmittingToMake = false;
+        addTaskForm.submit();
+      }
+    });
+  }
+
+  if (editTaskForm) {
+    console.log('[Make.com EDIT] Handler attached:', editTaskForm);
+    let isSubmittingToMake = false;
+    
+    const deleteBtn = editTaskForm.querySelector('button[name="delete_task"]');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', function(e) {
+        editTaskForm.setAttribute('data-delete', '1');
+      });
+    }
+
+    editTaskForm.addEventListener('submit', async function(e) {
+      if (isSubmittingToMake) return;
+      e.preventDefault();
+      isSubmittingToMake = true;
+
+      try {
+        const formData = new FormData(editTaskForm);
+        const isDelete = editTaskForm.getAttribute('data-delete') === '1';
+        const googleEventId = formData.get('google_event_id');
+
+        if (isDelete) {
+          const data = {
+            task_id: formData.get('task_id'),
+            action: 'delete',
+            google_event_id: googleEventId,
+          };
+
+          await fetch(makeWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          }).catch(err => {
+            console.error('[Make.com DELETE] Error:', err);
+          });
+
+          editTaskForm.removeAttribute('data-delete');
+          document.getElementById('edit_task_modal').close();
+          editTaskForm.submit();
+        } else {
+          const roles = [];
+          const attendees = [];
+          
+          editTaskForm.querySelectorAll('.staff-role-row').forEach(row => {
+            const role = row.querySelector('.role-select')?.value;
+            const staff = row.querySelector('.staff-select')?.value;
+            if (role && staff) {
+              roles.push({ role_id: role, staff_id: staff });
+              const staffObj = (staffData[role] || []).find(s => String(s.id) === String(staff));
+              if (staffObj && staffObj.email && !attendees.some(a => a.email === staffObj.email)) {
+                attendees.push({ email: staffObj.email });
+              }
+            }
+          });
+
+          const data = {
+            action: 'edit',
+            task_id: googleEventId,
+            title: formData.get('title'),
+            description: formData.get('description'),
+            deadline: formData.get('deadline'),
+            task_type: formData.get('task_type'),
+            status: formData.get('status'),
+            google_event_id: googleEventId,
+            assignments: roles,
+            attendees: attendees
+          };
+
+          await fetch(makeWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          }).catch(err => {
+            console.error('[Make.com EDIT] Error:', err);
+          });
+
+          editTaskForm.submit();
+        }
+      } catch (err) {
+        console.error('[Make.com EDIT] Error:', err);
+        isSubmittingToMake = false;
+        editTaskForm.submit();
+      }
+    });
+  }
+});
+</script>
 
 
 {% endblock 'content' %}

@@ -1,81 +1,134 @@
 <dialog id="add_task_modal" class="modal">
-    <div id="add-task-modal-content" class="modal-box max-h-[656px]">
-        <h2 class="text-2xl font-bold mb-6 text-center">Add Task</h2>
-        <form method="post">
-        {% csrf_token %}
-        <div class="form-control mb-4">
-            <label for="title" class="label">
-            <span class="label-text font-semibold">Title</span>
-            </label>
-            <input type="text" name="title" id="title" class="input input-bordered w-full" required>
+  <div id="add-task-modal-content" class="modal-box max-h-[656px]">
+    <h2 class="text-2xl font-bold mb-6 text-center">Add Task</h2>
+    <form method="post">
+      {% csrf_token %}
+      <input
+        type="hidden"
+        name="google_event_id"
+        id="add_google_event_id"
+        value=""
+      />
+      <div class="form-control mb-4">
+        <label for="title" class="label">
+          <span class="label-text font-semibold">Title</span>
+        </label>
+        <input
+          type="text"
+          name="title"
+          id="title"
+          class="input input-bordered w-full"
+          required
+        />
+      </div>
+      <div class="flex gap-4">
+        <div class="form-control mb-4 w-1/2">
+          <label for="task_type" class="label">
+            <span class="label-text font-semibold">Task Type</span>
+          </label>
+          <select
+            name="task_type"
+            id="task_type"
+            class="select select-bordered w-full"
+            required
+          >
+            <option value="">Select Task Type</option>
+            {% for value, label in Tasks.TASK_TYPE_CHOICES %}
+            <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+          </select>
         </div>
-        <div class="flex gap-4">
-            <div class="form-control mb-4 w-1/2">
-                <label for="task_type" class="label">
-                    <span class="label-text font-semibold">Task Type</span>
-                </label>
-                <select name="task_type" id="task_type" class="select select-bordered w-full" required>
-                    <option value="">Select Task Type</option>
-                    {% for value, label in Tasks.TASK_TYPE_CHOICES %}
-                        <option value="{{ value }}">{{ label }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-control mb-4 w-1/2">
-                <label for="deadline" class="label">
-                    <span class="label-text font-semibold">Deadline</span>
-                </label>
-                <input type="date" name="deadline" id="deadline" class="input input-bordered w-full" required>
-            </div>
+        <div class="form-control mb-4 w-1/2">
+          <label for="deadline" class="label">
+            <span class="label-text font-semibold">Deadline</span>
+          </label>
+          <input
+            type="date"
+            name="deadline"
+            id="deadline"
+            class="input input-bordered w-full"
+            required
+          />
         </div>
-        <div class="form-control mb-4">
-            <label for="description" class="label">
-                <span class="label-text font-semibold">Description</span>
-            </label>
-            <textarea name="description" id="description" class="textarea textarea-bordered w-full resize-y" rows="1"></textarea>
+      </div>
+      <div class="form-control mb-4">
+        <label for="description" class="label">
+          <span class="label-text font-semibold">Description</span>
+        </label>
+        <textarea
+          name="description"
+          id="description"
+          class="textarea textarea-bordered w-full resize-y"
+          rows="1"
+        ></textarea>
+      </div>
+      <div class="staff-role-container flex flex-col mb-2">
+        <!-- Single label row -->
+        <div class="flex gap-4 mb-1">
+          <div class="w-1/2">
+            <span class="label-text font-semibold">Role</span>
+          </div>
+          <div class="w-1/2">
+            <span class="label-text font-semibold">Staff</span>
+          </div>
+          <div style="width: 2.5rem"></div>
         </div>
-        <div class="staff-role-container flex flex-col mb-2">
-            <!-- Single label row -->
-            <div class="flex gap-4 mb-1">
-                <div class="w-1/2">
-                    <span class="label-text font-semibold">Role</span>
-                </div>
-                <div class="w-1/2">
-                    <span class="label-text font-semibold">Staff</span>
-                </div>
-                <div style="width:2.5rem"></div>
-            </div>
-            <!-- Dropdown row(s) -->
-            <div class="flex gap-4 staff-role-row mb-2 items-center">
-                <div class="w-1/2">
-                    <select class="select select-bordered w-full role-select" name="role[]">
-                        <option value="">Select Role</option>
-                        {% for role in roles %}
-                        <option value="{{ role.role_id }}">{{ role.role }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="w-1/2">
-                    <select class="select select-bordered w-full staff-select" name="staff[]">
-                        <option value="">Select Staff</option>
-                        <!-- Options will be populated by JS -->
-                    </select>
-                </div>
-                <button type="button" class="remove-row-btn btn btn-xs btn-ghost p-1" title="Delete">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400 group-hover:text-error hover:text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
+        <!-- Dropdown row(s) -->
+        <div class="flex gap-4 staff-role-row mb-2 items-center">
+          <div class="w-1/2">
+            <select
+              class="select select-bordered w-full role-select"
+              name="role[]"
+            >
+              <option value="">Select Role</option>
+              {% for role in roles %}
+              <option value="{{ role.role_id }}">{{ role.role }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="w-1/2">
+            <select
+              class="select select-bordered w-full staff-select"
+              name="staff[]"
+            >
+              <option value="">Select Staff</option>
+              <!-- Options will be populated by JS -->
+            </select>
+          </div>
+          <button
+            type="button"
+            class="remove-row-btn btn btn-xs btn-ghost p-1"
+            title="Delete"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-5 h-5 text-gray-400 group-hover:text-error hover:text-error"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
         </div>
-        <button type="button" class="add-staff-role-btn btn btn-outline btn-sm mb-4">Add More Staff</button>
-        <div class="modal-action">
-            <button type="submit" class="btn btn-primary">Save</button>
-        </div>
-        </form>
-    </div>
-    <form method="dialog" class="modal-backdrop">
-        <button>close</button>
+      </div>
+      <button
+        type="button"
+        class="add-staff-role-btn btn btn-outline btn-sm mb-4"
+      >
+        Add More Staff
+      </button>
+      <div class="modal-action">
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
     </form>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
 </dialog>

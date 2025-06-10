@@ -56,6 +56,7 @@ class Tasks(models.Model):
       choices=STATUS_CHOICES,
       default='WORKING'
   )
+  google_event_id = models.CharField(max_length=255, blank=True, null=True)  # For Google Calendar integration
 
 
 class Assignments(models.Model):
