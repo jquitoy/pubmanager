@@ -12,7 +12,19 @@
             <h2 class="text-2xl sm:text-3xl font-extrabold">Staff Members</h2>
             <span class="px-3 py-1 text-xs badge badge-primary">{{ staffCount }} members</span>
         </div>
-        <button class="btn btn-outline btn-primary w-full sm:w-auto" onclick="add_staff_modal.showModal()">Add Staff</button>
+        <div class="flex items-center gap-4">
+            <form action="" method="GET" class="form-control flex-grow">
+                <div class="relative w-full">
+                    <input type="text" id="staffSearch" name="search_query" placeholder="Search staff..." class="input input-bordered w-full pl-10" value="{{ search_query }}" />
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </form>
+            <button class="btn btn-outline btn-primary w-full sm:w-auto" onclick="add_staff_modal.showModal()">Add Staff</button>
+        </div>
     </div>
 
     <!-- Table Section -->
@@ -33,9 +45,9 @@
                             <th class="whitespace-nowrap">Actions</th>
                           </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="staffTableBody">
                           {% for staff in staffs %}
-                          <tr class="hover:bg-base-300">
+                          <tr class="hover:bg-base-300 staff-row">
                             <th>{{ forloop.counter0|add:page_obj.start_index }}</th>
                             <td class="break-words max-w-xs">{{ staff.full_name }}</td>
                             <td class="break-words max-w-xs">{{ staff.position }}</td>
@@ -86,7 +98,7 @@
 
     <!-- Pagination Section -->
     <div class="flex flex-col sm:flex-row items-center justify-between mt-6 gap-4">
-        <a href="?page={% if page_obj.has_previous %}{{ page_obj.previous_page_number }}{% else %}1{% endif %}" class="flex items-center px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800 {% if not page_obj.has_previous %}pointer-events-none opacity-50{% endif %}">
+        <a href="?page={% if page_obj.has_previous %}{{ page_obj.previous_page_number }}{% else %}1{% endif %}{% if search_query %}&search_query={{ search_query }}{% endif %}" class="flex items-center px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800 {% if not page_obj.has_previous %}pointer-events-none opacity-50{% endif %}">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 rtl:-scale-x-100">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 15.75L3 12m0 0l3.75-3.75M3 12h18" />
             </svg>
@@ -96,18 +108,18 @@
         <div class="items-center flex flex-wrap gap-x-2 gap-y-1 justify-center">
             {% for num in paginator.page_range %}
                 {% if page_obj.number == num %}
-                    <a href="?page={{ num }}" class="px-2 py-1 text-sm text-blue-500 rounded-md dark:bg-gray-800 bg-blue-100/60">{{ num }}</a>
+                    <a href="?page={{ num }}{% if search_query %}&search_query={{ search_query }}{% endif %}" class="px-2 py-1 text-sm text-blue-500 rounded-md dark:bg-gray-800 bg-blue-100/60">{{ num }}</a>
                 {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                    <a href="?page={{ num }}" class="px-2 py-1 text-sm text-gray-500 rounded-md dark:hover:bg-gray-800 dark:text-gray-300 hover:bg-gray-100">{{ num }}</a>
+                    <a href="?page={{ num }}{% if search_query %}&search_query={{ search_query }}{% endif %}" class="px-2 py-1 text-sm text-gray-500 rounded-md dark:hover:bg-gray-800 dark:text-gray-300 hover:bg-gray-100">{{ num }}</a>
                 {% elif num == 1 or num == paginator.num_pages %}
-                    <a href="?page={{ num }}" class="px-2 py-1 text-sm text-gray-500 rounded-md dark:hover:bg-gray-800 dark:text-gray-300 hover:bg-gray-100">{{ num }}</a>
+                    <a href="?page={{ num }}{% if search_query %}&search_query={{ search_query }}{% endif %}" class="px-2 py-1 text-sm text-gray-500 rounded-md dark:hover:bg-gray-800 dark:text-gray-300 hover:bg-gray-100">{{ num }}</a>
                 {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
                     <span class="px-2 py-1 text-sm text-gray-400">...</span>
                 {% endif %}
             {% endfor %}
         </div>
 
-        <a href="?page={% if page_obj.has_next %}{{ page_obj.next_page_number }}{% else %}{{ paginator.num_pages }}{% endif %}" class="flex items-center px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800 {% if not page_obj.has_next %}pointer-events-none opacity-50{% endif %}">
+        <a href="?page={% if page_obj.has_next %}{{ page_obj.next_page_number }}{% else %}{{ paginator.num_pages }}{% endif %}{% if search_query %}&search_query={{ search_query }}{% endif %}" class="flex items-center px-5 py-2 text-sm text-gray-700 capitalize transition-colors duration-200 bg-white border rounded-md gap-x-2 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800 {% if not page_obj.has_next %}pointer-events-none opacity-50{% endif %}">
             <span>Next</span>
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 rtl:-scale-x-100">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3" />

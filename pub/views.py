@@ -4,12 +4,13 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_GET
 from .forms import RoleForm, StaffForm, TaskWithAssignmentForm
 from .models import Roles, Staffs, Tasks, Assignments
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.paginator import Paginator
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib import messages
 
 
 # Create your views here.
@@ -44,6 +45,15 @@ def staff_list(request):
     staffs = Staffs.objects.all().order_by('staff_id')
     roles = Roles.objects.all()
 
+    search_query = request.GET.get('search_query', '')
+    if search_query:
+        staffs = staffs.filter(
+            Q(full_name__icontains=search_query) |
+            Q(position__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(role__role__icontains=search_query)
+        ).distinct() # Use distinct to avoid duplicate staff members if they have multiple matching roles
+
     # Pagination logic
     page_number = request.GET.get('page', 1)
     paginator = Paginator(staffs, 5)  # 10 staff per page
@@ -56,6 +66,7 @@ def staff_list(request):
         'roles': roles,
         'page_obj': page_obj,
         'paginator': paginator,
+        'search_query': search_query, # Pass the search query back to the template
     }
 
     if request.method == 'POST':
@@ -71,6 +82,7 @@ def staff_list(request):
         )
         staff.role.set(roles_selected)
         staff.save()
+        messages.success(request, 'Staff member added successfully!')
 
         # Re-paginate after adding
         staffs = Staffs.objects.all().order_by('staff_id')
@@ -90,6 +102,7 @@ def staff_add(request):
         form = StaffForm(request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Staff member added successfully!')
             return redirect('staff_list')
     else:
         form = StaffForm()
@@ -122,6 +135,7 @@ def staff_edit(request, staffId):
         staffObj.email = email
         staffObj.role.set(roles_selected)
         staffObj.save()
+        messages.success(request, 'Staff member updated successfully!')
 
         return redirect('/staff/list')
     
@@ -132,12 +146,11 @@ def staff_edit(request, staffId):
     
 @login_required
 def staff_delete(request, staffId):
-
     try:
         if request.method == 'POST':
             staffObj = Staffs.objects.get(pk=staffId)
             staffObj.delete()
-
+            messages.success(request, 'Staff member deleted successfully!')
             return redirect('/staff/list')
 
         else:
@@ -151,20 +164,17 @@ def staff_delete(request, staffId):
 
             return render(request, 'staff/deleteStaff.html', data)
 
-
-    
     except Exception as e:
-        return HttpResponse(f'Error occured during delete gender: {e}')
+        return HttpResponse(f'Error occurred during delete: {e}')
 
 @login_required
 def role_list(request):
     try:
         roles = Roles.objects.all()
-            # Get counts for all roles in one query
+        # Get counts for all roles in one query
         roles_with_counts = Roles.objects.annotate(
             staff_count=Count('staffs')  # Note the related_name
         ).order_by('role')
-
 
         data = {
             'roles':roles,
@@ -173,30 +183,29 @@ def role_list(request):
 
         if request.method == 'POST':
             role = request.POST.get('role_name')
-
             Roles.objects.create(role=role).save()
+            messages.success(request, 'Role added successfully!')
             return redirect('/roles/list')
 
         return render(request, 'staff/roleList.html', data)
 
     except Exception as e:
-        return HttpResponse(f'Error occured during load Roles: {e}')
-
+        return HttpResponse(f'Error occurred during load Roles: {e}')
 
 @login_required
 def role_add(request):
     try:
         if request.method == 'POST':
             role = request.POST.get('role_name')
-
             Roles.objects.create(role=role).save()
+            messages.success(request, 'Role added successfully!')
             return redirect('/roles/list')
         
         else:
             return render(request, 'staff/roleAdd.html')
         
     except Exception as e:
-        return HttpResponse(f'Error occured during add gender: {e}')
+        return HttpResponse(f'Error occurred during add role: {e}')
     
 @login_required
 def role_edit(request, roleId):
@@ -207,6 +216,7 @@ def role_edit(request, roleId):
             role = request.POST.get('role_name')
             roleObj.role = role
             roleObj.save()
+            messages.success(request, 'Role updated successfully!')
             return redirect('/roles/list')
 
         else:
@@ -219,32 +229,26 @@ def role_edit(request, roleId):
                 return render(request, 'staff/roleList.html', data)
 
     except Exception as e:
-        return HttpResponse(f'Error occured during edit')
+        return HttpResponse(f'Error occurred during edit')
     
-
 @login_required
 def role_delete(request, roleId):
-
     try:
         if request.method == 'POST':
             roleObj = Roles.objects.get(pk=roleId)
             roleObj.delete()
-
+            messages.success(request, 'Role deleted successfully!')
             return redirect('/roles/list')
 
         else:
             roleObj = Roles.objects.get(pk=roleId)
-
             data = {
                 'role': roleObj,
             }
-
             return render(request, '/roles/list', data)
 
-
-    
     except Exception as e:
-        return HttpResponse(f'Error occured during delete gender: {e}')
+        return HttpResponse(f'Error occurred during delete: {e}')
     
 
 
@@ -263,6 +267,7 @@ def task_add(request):
                 staff=staff_member,
                 role=role.role_id
             )
+            messages.success(request, 'Task added successfully!')
             return redirect('task_add')
         # If not a real submission, just render the form with filtered staff
     else:
@@ -388,7 +393,7 @@ def calendar(request):
         roles_selected = request.POST.getlist('role[]')
         staffs_selected = request.POST.getlist('staff[]')
         google_event_id = request.POST.get('google_event_id')
-        print('should delete after')
+
         if request.POST.get('action') == 'delete' and task_id:
             try:
                 task_id_int = int(task_id)
@@ -399,7 +404,9 @@ def calendar(request):
             print("Tasks matching:", Tasks.objects.filter(pk=task_id_int))
             Tasks.objects.filter(pk=task_id_int).delete()
             Assignments.objects.filter(task_id=task_id_int).delete()
+            messages.success(request, 'Task deleted successfully!')
             return redirect('/calendar')
+
         if task_id:
             # Edit existing task
             task = Tasks.objects.get(pk=task_id)
@@ -423,6 +430,7 @@ def calendar(request):
                         staff=Staffs.objects.get(pk=staff_id),
                         role=Roles.objects.get(pk=role_id).role_id
                     )
+            messages.success(request, 'Task updated successfully!')
         else:
             # Add new task
             task = Tasks.objects.create(
@@ -440,6 +448,7 @@ def calendar(request):
                         staff=Staffs.objects.get(pk=staff_id),
                         role=Roles.objects.get(pk=role_id).role_id
                     )
+            messages.success(request, 'Task added successfully!')
         return redirect('/calendar')
 
     return render(request, 'task/calendar.html', data)
@@ -461,6 +470,7 @@ def task_edit(request, taskId):
         task.deadline = deadline
         task.description = description
         task.save()
+        messages.success(request, 'Task updated successfully!')
 
         return redirect('/calendar')
 

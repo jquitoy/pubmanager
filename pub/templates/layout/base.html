@@ -34,15 +34,42 @@
         </svg>
     </button>
     <div class="flex min-h-screen">
-            {% include "include/sidebar.html" %}
+        {% include "include/sidebar.html" %}
         <div class="flex-1 md:ml-64 px-4" style="background-color: var(--color-base-100);">
+            {% if messages %}
+                <div class="fixed bottom-4 right-4 z-50 max-w-md w-full space-y-2">
+                    {% for message in messages %}
+                        <div role="alert" class="alert alert-success shadow-lg" id="alert-{{ forloop.counter }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+                <script>
+                    // Function to hide alerts
+                    function hideAlerts() {
+                        document.querySelectorAll('[role="alert"]').forEach(alert => {
+                            alert.style.transition = 'all 0.5s ease-out';
+                            alert.style.opacity = '0';
+                            alert.style.transform = 'translateY(100%)';
+                            setTimeout(() => {
+                                alert.style.display = 'none';
+                            }, 500);
+                        });
+                    }
+
+                    // Hide alerts after 3 seconds
+                    setTimeout(hideAlerts, 3000);
+                </script>
+            {% endif %}
             {% block 'content' %}{% endblock 'content' %}
         </div>
     </div>
     {% endblock 'sidebar' %}
 
     {% block 'login' %}{% endblock 'login' %}
-
 
     <script>
     // Sidebar toggle logic
