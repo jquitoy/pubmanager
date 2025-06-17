@@ -6,125 +6,125 @@
 
 {% block 'content' %}
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5 md:gap-6">
-  <!-- Metric Item Start -->
-  <div class="rounded-box border-2 border-base-300 bg-base-100  dark:border-gray-800 dark:bg-white/[0.03] md:p-6 flex flex-col items-start">
-    <div class="flex flex-col items-start">
-      <div class="flex h-12 w-12 items-center justify-center rounded-xl text-success">
-	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-9 text-success">
-		<path fill-rule="evenodd" d="M9 1.5H5.625c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5Zm6.61 10.936a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 14.47a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" />
-		<path d="M12.971 1.816A5.23 5.23 0 0 1 14.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 0 1 3.434 1.279 9.768 9.768 0 0 0-6.963-6.963Z" />
-	</svg>
-
-
-
+<div class="hidden lg:block">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5 md:gap-6">
+    <!-- Metric Item Start -->
+    <div class="rounded-box border-2 border-base-300 bg-base-100  dark:border-gray-800 dark:bg-white/[0.03] md:p-6 flex flex-col items-start">
+      <div class="flex flex-col items-start">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl text-success">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-9 text-success">
+            <path fill-rule="evenodd" d="M9 1.5H5.625c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5Zm6.61 10.936a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 14.47a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" />
+            <path d="M12.971 1.816A5.23 5.23 0 0 1 14.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 0 1 3.434 1.279 9.768 9.768 0 0 0-6.963-6.963Z" />
+          </svg>
+        </div>
+        <div class="mt-3 flex flex-col items-start w-full">
+          <span class="text-md text-base-content">Tasks Completed</span>
+          <h4 class="mt-2 text-2xl md:text-3xl font-bold text-base-content/90">{{ taskPostedCount }}</h4>
+        </div>
       </div>
-      <div class="mt-3 flex flex-col items-start w-full">
-        <span class="text-md text-base-content">Tasks Completed</span>
-        <h4 class="mt-2 text-2xl md:text-3xl font-bold text-base-content/90">{{ taskPostedCount }}</h4>
+    </div>
+    <!-- Metric Item End -->
+
+    <!-- Pending -->
+    <div class="rounded-2xl border-2 border-base-300 bg-base-100 p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 flex flex-col items-start">
+      <div class="flex flex-col items-start">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-base-100">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-9 text-warning">
+            <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div class="mt-3 flex flex-col items-start w-full">
+          <span class="text-md text-base-content">Tasks Pending</span>
+          <h4 class="mt-2 text-2xl md:text-3xl font-bold text-base-content/90">{{taskPendingCount}} </h4>
+        </div>
+      </div>
+    </div>
+
+    <!-- Missed -->
+    <div class="rounded-2xl border-2 border-base-300 bg-base-100 p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 flex flex-col items-start">
+      <div class="flex flex-col items-start">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-base-100">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-9 text-error">
+            <path d="M3.375 3C2.339 3 1.5 3.84 1.5 4.875v.75c0 1.036.84 1.875 1.875 1.875h17.25c1.035 0 1.875-.84 1.875-1.875v-.75C22.5 3.839 21.66 3 20.625 3H3.375Z" />
+            <path fill-rule="evenodd" d="m3.087 9 .54 9.176A3 3 0 0 0 6.62 21h10.757a3 3 0 0 0 2.995-2.824L20.913 9H3.087Zm6.133 2.845a.75.75 0 0 1 1.06 0l1.72 1.72 1.72-1.72a.75.75 0 1 1 1.06 1.06l-1.72 1.72 1.72 1.72a.75.75 0 1 1-1.06 1.06L12 15.685l-1.72 1.72a.75.75 0 1 1-1.06-1.06l1.72-1.72-1.72-1.72a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div class="mt-3 flex flex-col items-start w-full">
+          <span class="text-md text-base-content">Tasks Missed</span>
+          <h4 class="mt-2 text-2xl md:text-3xl font-bold text-base-content/90">{{taskMissedCount}} </h4>
+        </div>
       </div>
     </div>
   </div>
-  <!-- Metric Item End -->
-
-  <!-- Pending -->
-  <div class="rounded-2xl border-2 border-base-300 bg-base-100 p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 flex flex-col items-start">
-    <div class="flex flex-col items-start">
-      <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-base-100">
-	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-9 text-warning">
-		<path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clip-rule="evenodd" />
-	</svg>
-
-
-
-
+  {% comment %} end metrics {% endcomment %}
+  <div class="my-8 border border-base-300 rounded-2xl p-2 sm:p-5 shadow-2xl">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 h-auto md:h-[675px]">
+      <!-- First row: Headings -->
+      <div class="flex items-center">
       </div>
-      <div class="mt-3 flex flex-col items-start w-full">
-        <span class="text-md text-base-content">Tasks Pending</span>
-        <h4 class="mt-2 text-2xl md:text-3xl font-bold text-base-content/90">{{taskPendingCount}} </h4>
+      <div class="col-span-2 flex items-center">
+        <!-- Optionally, you can put a calendar heading here, or leave empty for alignment -->
       </div>
-    </div>
-  </div>
+      <!-- Second row: Content -->
+      <div class="flex flex-col gap-3 overflow-y-auto max-h-full min-w-0">
+        <div class="sticky top-0 z-10 bg-base-100 pb-2">
+          {% if taskPendingCount %}
+            <h1 class="text-xl md:text-2xl font-bold">Pending Tasks</h1>
+          {% else %}
+            <h1 class="text-xl md:text-2xl font-bold">No Pending Tasks</h1>
+          {% endif %}
+        </div>
 
-  <!-- Missed -->
-  <div class="rounded-2xl border-2 border-base-300 bg-base-100 p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 flex flex-col items-start">
-    <div class="flex flex-col items-start">
-      <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-base-100">
-	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-9 text-error">
-		<path d="M3.375 3C2.339 3 1.5 3.84 1.5 4.875v.75c0 1.036.84 1.875 1.875 1.875h17.25c1.035 0 1.875-.84 1.875-1.875v-.75C22.5 3.839 21.66 3 20.625 3H3.375Z" />
-		<path fill-rule="evenodd" d="m3.087 9 .54 9.176A3 3 0 0 0 6.62 21h10.757a3 3 0 0 0 2.995-2.824L20.913 9H3.087Zm6.133 2.845a.75.75 0 0 1 1.06 0l1.72 1.72 1.72-1.72a.75.75 0 1 1 1.06 1.06l-1.72 1.72 1.72 1.72a.75.75 0 1 1-1.06 1.06L12 15.685l-1.72 1.72a.75.75 0 1 1-1.06-1.06l1.72-1.72-1.72-1.72a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
-	</svg>
-
-
-
-
-      </div>
-      <div class="mt-3 flex flex-col items-start w-full">
-        <span class="text-md text-base-content">Tasks Missed</span>
-        <h4 class="mt-2 text-2xl md:text-3xl font-bold text-base-content/90">{{taskMissedCount}} </h4>
-      </div>
-    </div>
-  </div>
-</div>
-{% comment %} end metrics {% endcomment %}
-<div class="my-8 border border-base-300 rounded-2xl p-2 sm:p-5 shadow-2xl">
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 h-auto md:h-[675px]">
-    <!-- First row: Headings -->
-    <div class="flex items-center">
-    </div>
-    <div class="col-span-2 flex items-center">
-      <!-- Optionally, you can put a calendar heading here, or leave empty for alignment -->
-    </div>
-    <!-- Second row: Content -->
-    <div class="flex flex-col gap-3 overflow-y-auto max-h-full">
-      <div class="sticky top-0 z-10 bg-base-100 pb-2">
-        {% if taskPendingCount %}
-          <h1 class="text-xl md:text-2xl font-bold">Pending Tasks</h1>
-        {% else %}
-          <h1 class="text-xl md:text-2xl font-bold">No Pending Tasks</h1>
-        {% endif %}
-      </div>
-
-      {% for item in tasksPendingWithStaff %}
-      <div class="bg-primary p-3 md:p-5 rounded-2xl max-h-20 flex flex-col md:flex-row items-center gap-3 md:gap-5">
-        <div class="flex flex-col items-center ">
-            <h1 class="text-lg md:text-2xl font-bold leading-none ">
-            {{ item.task.deadline|date:"b"|upper }}
+        {% for item in tasksPendingWithStaff %}
+        <div class="bg-primary p-3 md:p-5 rounded-2xl max-h-20 flex flex-col md:flex-row items-center gap-3 md:gap-5 overflow-hidden w-full">
+          <div class="flex flex-col items-center flex-shrink-0 flex-grow-0">
+              <h1 class="text-lg md:text-2xl font-bold leading-none ">
+              {{ item.task.deadline|date:"b"|upper }}
+              </h1>
+            <h1 class="text-2xl md:text-4xl font-extrabold leading-none mt-0">
+              {{ item.task.deadline|date:"d" }}
             </h1>
-          <h1 class="text-2xl md:text-4xl font-extrabold leading-none mt-0">
-            {{ item.task.deadline|date:"d" }}
-          </h1>
-        </div>
-        <div class="flex flex-col items-baseline ">
-          <div class="text-xl font-bold">
-            {{item.task.title}}
           </div>
-          <div class="flex flex-row items-center gap-3">
-            {% for abbr in item.staff_display %}
-              <div>{{ abbr }}</div>
-            {% endfor %}
+          <div class="flex flex-col items-baseline flex-1 min-w-0 overflow-hidden">
+            <div class="text-xl font-bold block w-full text-ellipsis overflow-hidden whitespace-nowrap tooltip tooltip-top" data-tip="{{item.task.title}}">
+              {{item.task.title}}
+            </div>
+            <div class="block w-full text-ellipsis overflow-hidden whitespace-nowrap tooltip">
+              <div class="tooltip-content">
+                {% for abbr in item.staff_display %}{{ abbr }} {% endfor %}
+              </div>
+              {{ item.staff_display|join:" " }}
+            </div>
           </div>
         </div>
+        {% endfor %}
+
+
+
+
       </div>
-      {% endfor %}
-      
-
-
-
-
-      <!-- ...more tasks... -->
-    </div>
-    <div class="col-span-2">
-      <div id="calendar" class="h-[400px] md:h-full w-full"></div>
+      <div class="col-span-2">
+        <div id="calendar" class="h-[400px] md:h-full w-full"></div>
+      </div>
     </div>
   </div>
 </div>
+
+<div class="lg:hidden flex flex-col items-center justify-center h-full text-center p-4">
+  {% block 'error-view' %}
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-24 h-24 text-warning mb-4">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.992-1.45 1.746v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+  </svg>
+  <h2 class="text-3xl font-bold mb-2">View Not Supported</h2>
+  <p class="text-lg text-gray-600">This calendar view is not optimized for smaller screens. Please use a device with a larger screen for the best experience.</p>
+  {% endblock 'error-view' %}
+</div>
+
 {% comment %} <script src="{% static 'js/calendar.js' %}"></script> {% endcomment %}
 
 
 {% include "task/taskAddModal.html" %}
 {% include "task/taskEditModal.html" %}
-
 
 
 
@@ -157,14 +157,7 @@
       document.querySelector('#edit_task_modal [name="task_id"]').value = event.id || '';
       // Set google_event_id in the edit form if present
       let googleEventId = event.extendedProps.google_event_id || '';
-      let googleEventInput = document.querySelector('#edit_task_modal [name="google_event_id"]');
-      if (!googleEventInput) {
-        googleEventInput = document.createElement('input');
-        googleEventInput.type = 'hidden';
-        googleEventInput.name = 'google_event_id';
-        document.querySelector('#edit_task_modal form').appendChild(googleEventInput);
-      }
-      googleEventInput.value = googleEventId;
+      document.querySelector('#edit_task_modal [name="google_event_id"]').value = googleEventId;
 
       // Ensure the status dropdown is updated visually (for DaisyUI or custom select)
       const statusSelect = document.querySelector('#edit_task_modal [name="status"]');
@@ -333,65 +326,83 @@ document.addEventListener('DOMContentLoaded', function() {
   
   if (addTaskForm) {
     let isSubmittingToMake = false;
-    console.log('[Make.com ADD] Handler attached:', addTaskForm);
     addTaskForm.addEventListener('submit', async function(e) {
       if (isSubmittingToMake) return;
       e.preventDefault();
       isSubmittingToMake = true;
 
       try {
-        // Build the staff-role summary
+        // Build the staff-role summary and collect assignments
         let staffRoleSummary = '';
-        addTaskForm.querySelectorAll('.staff-role-row').forEach(row => {
+        const attendees = [];
+        const formData = new FormData(addTaskForm);
+        const taskTypeSelect = addTaskForm.querySelector('[name="task_type"]');
+        const taskTypeForMake = taskTypeSelect ? taskTypeSelect.options[taskTypeSelect.selectedIndex]?.text?.trim() : '';
+        const userDesc = formData.get('description') || '';
+
+        console.log('Initial staffData:', staffData);
+        console.log('Detailed staffData structure:', JSON.stringify(staffData, null, 2));
+        
+        addTaskForm.querySelectorAll('.staff-role-row').forEach((row, index) => {
           const roleSelect = row.querySelector('.role-select');
           const staffSelect = row.querySelector('.staff-select');
+          const roleId = roleSelect.value;
+          const staffId = staffSelect.value;
           const roleName = roleSelect.options[roleSelect.selectedIndex]?.text?.trim();
           const staffName = staffSelect.options[staffSelect.selectedIndex]?.text?.trim();
-          if (roleName && staffName && staffName !== 'Select Staff') {
-            staffRoleSummary += `${roleName} - ${staffName}\n`;
-          }
-        });
-
-        // Get user's original description
-        const descriptionInput = addTaskForm.querySelector('[name="description"]');
-        let userDesc = descriptionInput ? descriptionInput.value.trim() : '';
-        
-        // Combine user description and staff-role summary for Make.com payload
-        const combinedDescriptionForMake = userDesc ? (userDesc + '\n\n' + staffRoleSummary) : staffRoleSummary;
-
-        const formData = new FormData(addTaskForm);
-        const roles = [];
-        const attendees = [];
-        
-        addTaskForm.querySelectorAll('.staff-role-row').forEach(row => {
-          const role = row.querySelector('.role-select')?.value;
-          const staff = row.querySelector('.staff-select')?.value;
-          if (role && staff) {
-            roles.push({ role_id: role, staff_id: staff });
-            const staffObj = (staffData[role] || []).find(s => String(s.id) === String(staff));
-            if (staffObj && staffObj.email && !attendees.some(a => a.email === staffObj.email)) {
-              attendees.push({ email: staffObj.email });
+          
+          console.log(`Row ${index + 1} data:`, {
+            roleId,
+            staffId,
+            roleName,
+            staffName,
+            roleSelectOptions: Array.from(roleSelect.options).map(opt => ({ value: opt.value, text: opt.text })),
+            staffSelectOptions: Array.from(staffSelect.options).map(opt => ({ value: opt.value, text: opt.text }))
+          });
+          
+          if (roleId && staffId) {
+            console.log(`Looking up staff member for role ${roleId} and staff ${staffId}`);
+            console.log('Available staff for this role:', staffData[roleId]);
+            
+            const staffMembers = staffData[roleId];
+            console.log('Staff members for role:', staffMembers);
+            
+            staffMembers?.forEach(staff => {
+              console.log('Staff member structure:', staff);
+            });
+            
+            const staffMember = staffMembers?.find(staff => {
+              console.log('Comparing:', { staffId, staffValue: staff.id });
+              return staff.id === parseInt(staffId);
+            });
+            
+            console.log('Found staff member:', staffMember);
+            
+            if (staffMember?.email) {
+              console.log('Adding attendee with email:', staffMember.email);
+              attendees.push({ email: staffMember.email });
+              console.log('Current attendees array:', JSON.stringify(attendees));
+            } else {
+              console.log('No email found for staff member');
+            }
+            
+            if (roleName && staffName && staffName !== 'Select Staff') {
+              staffRoleSummary += `${roleName} - ${staffName}\n`;
             }
           }
         });
 
-        // Get task type for Make.com payload (using label instead of value)
-        const taskTypeSelect = addTaskForm.querySelector('[name="task_type"]');
-        const taskTypeForMake = taskTypeSelect ? taskTypeSelect.options[taskTypeSelect.selectedIndex]?.text?.trim() : '';
-        const statusForMake = formData.get('status') || 'PENDING';
+        console.log('Final attendees array before data object:', JSON.stringify(attendees));
 
         let finalDescriptionForMake = '';
         if (taskTypeForMake) {
             finalDescriptionForMake += taskTypeForMake.toUpperCase();
-            if (statusForMake) {
-                finalDescriptionForMake += ' ' + statusForMake.toUpperCase();
-            }
+            finalDescriptionForMake += ' PENDING';
         }
 
-        let userDescForMake = descriptionInput ? descriptionInput.value.trim() : '';
-        if (userDescForMake) {
+        if (userDesc) {
             if (finalDescriptionForMake) finalDescriptionForMake += '\n';
-            finalDescriptionForMake += userDescForMake;
+            finalDescriptionForMake += userDesc;
         }
 
         if (staffRoleSummary) {
@@ -400,49 +411,109 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const data = {
-          action: 'create',
+          action: 'add',
           title: formData.get('title'),
-          description: finalDescriptionForMake, // Use combined description for Make.com
+          description: finalDescriptionForMake,
           deadline: formData.get('deadline'),
           task_type: formData.get('task_type'),
-          status: formData.get('status'),
+          status: 'PENDING',
           google_event_id: formData.get('google_event_id'),
-          assignments: roles,
-          attendees: attendees
+          staff_role_summary: staffRoleSummary,
+          attendees: [...attendees]  // Create a new array to ensure we're not losing the data
         };
 
-        let googleEventIdFromMake = '';
+        console.log('Final data being sent to Make.com:', JSON.stringify(data, null, 2));
+
         try {
           const response = await fetch(makeWebhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
           });
-          const json = await response.json();
-          googleEventIdFromMake = json.google_event_id;
+          const responseText = await response.text();
+          
+          if (!response.ok) {
+            throw new Error('Failed to sync with Google Calendar');
+          }
+
+          // Parse the response to get the Google Calendar event ID
+          try {
+            const responseData = JSON.parse(responseText);
+            if (responseData.google_event_id) {
+              document.querySelector('#add_task_modal [name="google_event_id"]').value = responseData.google_event_id;
+            }
+          } catch (parseError) {
+            // Ignore parse errors
+          }
+
+          addTaskForm.submit();
         } catch (err) {
-          console.error('[Make.com ADD] Error:', err);
+          isSubmittingToMake = false;
+          alert('Failed to sync with Google Calendar. Please try again.');
         }
-        if (googleEventIdFromMake) {
-          addTaskForm.querySelector('[name="google_event_id"]').value = googleEventIdFromMake;
-        }
-        addTaskForm.submit();
       } catch (err) {
-        console.error('[Make.com ADD] Error:', err);
         isSubmittingToMake = false;
-        addTaskForm.submit();
+        alert('An error occurred. Please try again.');
       }
     });
   }
 
   if (editTaskForm) {
-    console.log('[Make.com EDIT] Handler attached:', editTaskForm);
     let isSubmittingToMake = false;
     
     const deleteBtn = editTaskForm.querySelector('button[name="delete_task"]');
     if (deleteBtn) {
-      deleteBtn.addEventListener('click', function(e) {
-        editTaskForm.setAttribute('data-delete', '1');
+      deleteBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(editTaskForm);
+        const googleEventId = formData.get('google_event_id');
+        
+        if (!googleEventId) {
+          editTaskForm.setAttribute('data-delete', '1');
+          let actionInput = editTaskForm.querySelector('[name="action"]');
+          if (!actionInput) {
+            actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            editTaskForm.appendChild(actionInput);
+          }
+          actionInput.value = 'delete';
+          editTaskForm.dispatchEvent(new Event('submit'));
+          return;
+        }
+
+        const deleteData = {
+          action: 'delete',
+          task_id: formData.get('task_id'),
+          google_event_id: googleEventId
+        };
+        
+        try {
+          const response = await fetch(makeWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(deleteData)
+          });
+          const responseText = await response.text();
+          
+          if (!response.ok) {
+            throw new Error('Failed to delete from Google Calendar');
+          }
+
+          editTaskForm.setAttribute('data-delete', '1');
+          let actionInput = editTaskForm.querySelector('[name="action"]');
+          if (!actionInput) {
+            actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            editTaskForm.appendChild(actionInput);
+          }
+          actionInput.value = 'delete';
+          document.getElementById('edit_task_modal').close();
+          editTaskForm.submit();
+        } catch (err) {
+          alert('Failed to delete from Google Calendar. Please try again.');
+        }
       });
     }
 
@@ -455,121 +526,98 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData(editTaskForm);
         const isDelete = editTaskForm.getAttribute('data-delete') === '1';
         const googleEventId = formData.get('google_event_id');
+        const taskTypeSelect = editTaskForm.querySelector('[name="task_type"]');
+        const taskTypeForMake = taskTypeSelect ? taskTypeSelect.options[taskTypeSelect.selectedIndex]?.text?.trim() : '';
+        const userDesc = formData.get('description') || '';
 
         if (isDelete) {
-          let makeDeleteSuccess = false;
-          try {
-            const response = await fetch(makeWebhookUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                task_id: formData.get('task_id'),
-                action: 'delete',
-                google_event_id: googleEventId,
-              })
-            });
-            makeDeleteSuccess = response.ok;
-            if (!makeDeleteSuccess) {
-              console.error('[Make.com DELETE] Non-200 response:', await response.text());
-            }
-          } catch (err) {
-            console.error('[Make.com DELETE] Error:', err);
-          }
-          // Set the action field to 'delete' before submitting to Django
-          let actionInput = editTaskForm.querySelector('[name="action"]');
-          if (!actionInput) {
-            actionInput = document.createElement('input');
-            actionInput.type = 'hidden';
-            actionInput.name = 'action';
-            editTaskForm.appendChild(actionInput);
-          }
-          actionInput.value = 'delete';
-          editTaskForm.removeAttribute('data-delete');
-          document.getElementById('edit_task_modal').close();
-          editTaskForm.submit();
           return;
-        } else {
-          // Build the staff-role summary
-          let staffRoleSummary = '';
-          editTaskForm.querySelectorAll('.staff-role-row').forEach(row => {
-            const roleSelect = row.querySelector('.role-select');
-            const staffSelect = row.querySelector('.staff-select');
-            const roleName = roleSelect.options[roleSelect.selectedIndex]?.text?.trim();
-            const staffName = staffSelect.options[staffSelect.selectedIndex]?.text?.trim();
+        }
+
+        // Build the staff-role summary and collect assignments
+        let staffRoleSummary = '';
+        const attendees = [];
+        editTaskForm.querySelectorAll('.staff-role-row').forEach(row => {
+          const roleSelect = row.querySelector('.role-select');
+          const staffSelect = row.querySelector('.staff-select');
+          const roleId = roleSelect.value;
+          const staffId = staffSelect.value;
+          const roleName = roleSelect.options[roleSelect.selectedIndex]?.text?.trim();
+          const staffName = staffSelect.options[staffSelect.selectedIndex]?.text?.trim();
+          
+          if (roleId && staffId) {
+            const staffMembers = staffData[roleId];
+            const staffMember = staffMembers?.find(staff => staff.id === parseInt(staffId));
+            
+            if (staffMember?.email) {
+              attendees.push({ email: staffMember.email });
+            }
+            
             if (roleName && staffName && staffName !== 'Select Staff') {
               staffRoleSummary += `${roleName} - ${staffName}\n`;
             }
-          });
-          
-          // Get user's original description
-          const descriptionInput = editTaskForm.querySelector('[name="description"]');
-          let userDesc = descriptionInput ? descriptionInput.value.trim() : '';
-
-          // Get task type for Make.com payload (using label instead of value)
-          const taskTypeSelect = editTaskForm.querySelector('[name="task_type"]');
-          const taskTypeForMake = taskTypeSelect ? taskTypeSelect.options[taskTypeSelect.selectedIndex]?.text?.trim() : '';
-          const statusForMake = formData.get('status') || 'PENDING';
-
-          let finalDescriptionForMake = '';
-          if (taskTypeForMake) {
-              finalDescriptionForMake += taskTypeForMake.toUpperCase();
-              if (statusForMake) {
-                  finalDescriptionForMake += ' ' + statusForMake.toUpperCase();
-              }
           }
+        });
 
-          if (userDesc) {
-              if (finalDescriptionForMake) finalDescriptionForMake += '\n';
-              finalDescriptionForMake += userDesc;
-          }
+        let finalDescriptionForMake = '';
+        if (taskTypeForMake) {
+            finalDescriptionForMake += taskTypeForMake.toUpperCase();
+            const statusForMake = formData.get('status') || 'PENDING';
+            finalDescriptionForMake += ' ' + statusForMake.toUpperCase();
+        }
 
-          if (staffRoleSummary) {
-              if (finalDescriptionForMake) finalDescriptionForMake += '\n\n';
-              finalDescriptionForMake += staffRoleSummary;
-          }
+        if (userDesc) {
+            if (finalDescriptionForMake) finalDescriptionForMake += '\n';
+            finalDescriptionForMake += userDesc;
+        }
 
-          const roles = [];
-          const attendees = [];
-          
-          editTaskForm.querySelectorAll('.staff-role-row').forEach(row => {
-            const role = row.querySelector('.role-select')?.value;
-            const staff = row.querySelector('.staff-select')?.value;
-            if (role && staff) {
-              roles.push({ role_id: role, staff_id: staff });
-              const staffObj = (staffData[role] || []).find(s => String(s.id) === String(staff));
-              if (staffObj && staffObj.email && !attendees.some(a => a.email === staffObj.email)) {
-                attendees.push({ email: staffObj.email });
-              }
-            }
-          });
+        if (staffRoleSummary) {
+            if (finalDescriptionForMake) finalDescriptionForMake += '\n\n';
+            finalDescriptionForMake += staffRoleSummary;
+        }
 
-          const data = {
-            action: 'edit',
-            task_id: googleEventId,
-            title: formData.get('title'),
-            description: finalDescriptionForMake, // Use combined description for Make.com
-            deadline: formData.get('deadline'),
-            task_type: formData.get('task_type'),
-            status: formData.get('status'),
-            google_event_id: googleEventId,
-            assignments: roles,
-            attendees: attendees
-          };
+        const data = {
+          action: 'edit',
+          task_id: formData.get('task_id'),
+          title: formData.get('title'),
+          description: finalDescriptionForMake,
+          deadline: formData.get('deadline'),
+          task_type: formData.get('task_type'),
+          status: formData.get('status'),
+          google_event_id: googleEventId || null,
+          attendees: [...attendees],
+          create_if_not_exists: !googleEventId
+        };
 
-          await fetch(makeWebhookUrl, {
+        try {
+          const response = await fetch(makeWebhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
-          }).catch(err => {
-            console.error('[Make.com EDIT] Error:', err);
           });
+          const responseText = await response.text();
+          
+          if (!response.ok) {
+            throw new Error('Failed to sync with Google Calendar');
+          }
+
+          try {
+            const responseData = JSON.parse(responseText);
+            if (responseData.google_event_id) {
+              document.querySelector('#edit_task_modal [name="google_event_id"]').value = responseData.google_event_id;
+            }
+          } catch (parseError) {
+            // Ignore parse errors
+          }
 
           editTaskForm.submit();
+        } catch (err) {
+          isSubmittingToMake = false;
+          alert('Failed to sync with Google Calendar. Please try again.');
         }
       } catch (err) {
-        console.error('[Make.com EDIT] Error:', err);
         isSubmittingToMake = false;
-        editTaskForm.submit();
+        alert('An error occurred. Please try again.');
       }
     });
   }

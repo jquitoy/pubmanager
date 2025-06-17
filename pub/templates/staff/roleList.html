@@ -4,7 +4,7 @@
 
 
 {% block 'content' %}
-<section class="mt-8 container px-2 sm:px-4 md:px-8">
+<section class="mt-8 w-full px-2 sm:px-4 md:px-8">
     <!-- Header Section -->
     <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
         <div class="flex items-center gap-x-3">
@@ -16,27 +16,25 @@
 
     <!-- Table Section -->
     <div class="flex flex-col">
-        <div class="-mx-2 -my-2 overflow-x-auto sm:-mx-4 md:-mx-6 lg:-mx-8">
-            <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-                <div class="overflow-hidden border border-base-300 dark:border-gray-700 md:rounded-lg">
-                    <div class="overflow-x-auto">
-                      <table class="table w-full text-sm md:text-base">
+        <div class="overflow-x-auto">
+            <div class="overflow-hidden border border-base-300 dark:border-gray-700 md:rounded-lg">
+                      <table class="table w-full text-sm md:text-base" style="table-layout: fixed;">
                         <!-- head -->
                         <thead>
                           <tr>
-                            <th class="whitespace-nowrap">Role Name</th>
-                            <th class="whitespace-nowrap">Num. of Staff</th>
-                            <th class="whitespace-nowrap">Actions</th>
+                            <th class="whitespace-nowrap text-left">Role Name</th>
+                            <th class="whitespace-nowrap text-center w-[120px]">Num. of Staff</th>
+                            <th class="whitespace-nowrap w-[100px] flex justify-end items-center">Actions</th>
                           </tr>
                         </thead>
                         <tbody>
                           {% for role in roles_with_counts %}
                           <tr class="hover:bg-base-300">
-                            <td class="break-words max-w-xs">{{ role.role }}</td>
-                            <td class="break-words max-w-xs">{{ role.staff_count }}</td>
+                            <td class="break-words text-left">{{ role.role }}</td>
+                            <td class="break-words text-center w-[120px]">{{ role.staff_count }}</td>
 
-                            <td>
-                              <div class="flex gap-2 flex-wrap">
+                            <td class="text-right w-[100px]">
+                              <div class="flex gap-2 flex-wrap justify-end">
                                 <!-- Edit Button -->
                                 <button class="btn btn-xs btn-ghost p-1 group"
                                     hx-get="/roles/edit/{{ role.role_id }}/"
@@ -66,8 +64,6 @@
                           {% endfor %}
                         </tbody>
                       </table>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

@@ -6,27 +6,27 @@
 
 {% block 'content' %}
 
-<div class="grid grid-cols-2 gap-5 mt-5 mb-5">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5 mb-5">
 
   <!-- Role Breakdown Card -->
-  <div class="border rounded-2xl border-base-300 shadow-2xl h-[475px] w-full flex flex-col items-center justify-center">
-    <h1 class="text-3xl font-bold text-center my-3">Roles Distribution</h1>
-    <div class="flex items-center justify-center w-full h-[400px]">
+  <div class="border rounded-2xl border-base-300 shadow-2xl h-auto min-h-[475px] w-full flex flex-col items-center justify-center p-4">
+    <h1 class="text-2xl lg:text-3xl font-bold text-center my-3">Roles Distribution</h1>
+    <div class="flex items-center justify-center w-full h-[250px] sm:h-[300px] md:h-[350px] lg:h-[400px]">
       <canvas id="roleBreakdown"></canvas>
     </div>
   </div>
 
-   <div class="border rounded-2xl border-base-300 shadow-2xl h-[475px] w-full flex flex-col items-center justify-center">
-      <h1 class="text-3xl font-bold text-center my-3">Tasks Progress</h1>
+   <div class="border rounded-2xl border-base-300 shadow-2xl h-auto min-h-[475px] w-full flex flex-col items-center justify-center p-4">
+      <h1 class="text-2xl lg:text-3xl font-bold text-center my-3">Tasks Progress</h1>
       <div id="tasksProgressBar" class="w-full flex flex-col items-center justify-center flex-1">
         <div class="flex-1 flex items-center justify-center w-full">
-          <div id="tasksProgressChart"></div>
+          <div id="tasksProgressChart" class="w-full h-[250px] sm:h-[300px] md:h-[350px]"></div>
         </div>
-        <div class="mt-8 w-full flex flex-row gap-5 items-start justify-items-center mb-3">
-          <div class="flex-1 text-center">Total<br><span class='font-bold text-lg'>{{ tasks_total }}</span></div>
-          <div class="flex-1 text-center">Completed<br><span class='font-bold text-lg text-green-600'>{{ tasks_posted }}</span></div>
-          <div class="flex-1 text-center">Pending<br><span class='font-bold text-lg text-yellow-600'>{{ tasks_pending }}</span></div>
-          <div class="flex-1 text-center">Missed<br><span class='font-bold text-lg text-red-600'>{{ tasks_missed }}</span></div>
+        <div class="mt-8 w-full grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-5 items-start justify-items-center mb-3">
+          <div class="flex-1 text-center">Total<br><span class='font-bold text-base lg:text-lg'>{{ tasks_total }}</span></div>
+          <div class="flex-1 text-center">Completed<br><span class='font-bold text-base lg:text-lg text-green-600'>{{ tasks_posted }}</span></div>
+          <div class="flex-1 text-center">Pending<br><span class='font-bold text-base lg:text-lg text-yellow-600'>{{ tasks_pending }}</span></div>
+          <div class="flex-1 text-center">Missed<br><span class='font-bold text-base lg:text-lg text-red-600'>{{ tasks_missed }}</span></div>
         </div>
       </div>
   </div> 
@@ -34,9 +34,11 @@
 
 
 
-<div class="border rounded-2xl border-base-300 shadow-2xl p-5 mx-1 mb-5 h-[675px] overflow-x-auto overflow-y-auto">
-    <h1 class="text-5xl font-bold text-center mb-5">Staff Task Status</h1>
-	<canvas id="staffStatus" style="width:100%; min-width:600px; height:675px;"></canvas>
+<div class="border rounded-2xl border-base-300 shadow-2xl p-4 lg:p-5 mx-1 mb-5 h-auto min-h-[675px] overflow-x-auto overflow-y-auto">
+    <h1 class="text-3xl lg:text-5xl font-bold text-center mb-5">Staff Task Status</h1>
+    <div class="w-full">
+        <canvas id="staffStatus" class="w-full h-[350px] sm:h-[450px] md:h-[550px] lg:h-[675px]"></canvas>
+    </div>
 </div>
 
 
@@ -66,12 +68,15 @@ let chart = new Chart(ctx, {
      ]
   },
   options: {
-      responsive: false,
+      responsive: true,
       maintainAspectRatio: false,
       indexAxis: 'y',
       scales: {
         x: {
-          stacked: true
+          stacked: true,
+          ticks: {
+            beginAtZero: true,
+          }
         },
         y: {
           stacked: true
@@ -79,7 +84,8 @@ let chart = new Chart(ctx, {
       },
       plugins: {
         legend: {
-          display: true
+          display: true,
+          position: 'top'
         }
       },
     },
@@ -152,10 +158,10 @@ document.addEventListener("DOMContentLoaded", function() {
   // Update the Tasks metric labels
   const tasksLabelDivs = document.querySelectorAll('#tasksProgressBar .mt-8 > div');
   if (tasksLabelDivs.length === 4) {
-    tasksLabelDivs[0].innerHTML = `Total<br><span class='font-bold text-lg'>${totalAllTasks}</span>`;
-    tasksLabelDivs[1].innerHTML = `Completed<br><span class='font-bold text-lg text-green-600'>${totalTasksPosted}</span>`;
-    tasksLabelDivs[2].innerHTML = `Pending<br><span class='font-bold text-lg text-yellow-600'>${totalTasksPending}</span>`;
-    tasksLabelDivs[3].innerHTML = `Missed<br><span class='font-bold text-lg text-red-600'>${totalTasksMissed}</span>`;
+    tasksLabelDivs[0].innerHTML = `Total<br><span class='font-bold text-base lg:text-lg'>${totalAllTasks}</span>`;
+    tasksLabelDivs[1].innerHTML = `Completed<br><span class='font-bold text-base lg:text-lg text-green-600'>${totalTasksPosted}</span>`;
+    tasksLabelDivs[2].innerHTML = `Pending<br><span class='font-bold text-base lg:text-lg text-yellow-600'>${totalTasksPending}</span>`;
+    tasksLabelDivs[3].innerHTML = `Missed<br><span class='font-bold text-base lg:text-lg text-red-600'>${totalTasksMissed}</span>`;
   }
 
   // Render Tasks Progress radial bar chart (only progress, no missed)
@@ -178,7 +184,7 @@ document.addEventListener("DOMContentLoaded", function() {
       chart: {
         fontFamily: "Outfit, sans-serif",
         type: "radialBar",
-        height: 750,
+        height: '100%',
         sparkline: {
           enabled: true,
         },
@@ -198,7 +204,7 @@ document.addEventListener("DOMContentLoaded", function() {
           dataLabels: {
             name: { show: false },
             value: {
-              fontSize: "50px",
+              fontSize: "2rem",
               fontWeight: "700",
               offsetY: 20,
               color: 'rgba(40,167,69,0.85)',

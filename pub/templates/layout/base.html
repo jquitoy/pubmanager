@@ -25,8 +25,8 @@
     document.documentElement.setAttribute('data-theme', savedTheme);
     </script>
 </head>
-<body class="overflow-x-hidden">
-    {% block 'sidebar' %}
+<body >
+    {% block 'sidebar' %} 
     <!-- Mobile sidebar open button -->
     <button id="sidebar-open-btn" class="fixed top-4 left-4 z-40 p-2 rounded-md bg-gray-800 text-white md:hidden focus:outline-none focus:ring-2 focus:ring-gray-400">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -35,13 +35,13 @@
     </button>
     <div class="flex min-h-screen">
         {% include "include/sidebar.html" %}
-        <div class="flex-1 md:ml-64 px-4" style="background-color: var(--color-base-100);">
+        <div class="flex-1 md:ml-64 min-w-0" style="background-color: var(--color-base-100);">
             {% if messages %}
                 <div class="fixed bottom-4 right-4 z-50 max-w-md w-full space-y-2">
                     {% for message in messages %}
                         <div role="alert" class="alert alert-success shadow-lg" id="alert-{{ forloop.counter }}">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             <span>{{ message }}</span>
                         </div>
@@ -64,7 +64,9 @@
                     setTimeout(hideAlerts, 3000);
                 </script>
             {% endif %}
-            {% block 'content' %}{% endblock 'content' %}
+            <div class="flex flex-col flex-1">
+                {% block 'content' %}{% endblock 'content' %}
+            </div>
         </div>
     </div>
     {% endblock 'sidebar' %}
