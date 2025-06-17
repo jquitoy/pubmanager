@@ -78,5 +78,3 @@ class Assignments(models.Model):
         ],
         default='PENDING'
     )
-  
-    notes = models.TextField(blank=True)  # Feedback from admin
