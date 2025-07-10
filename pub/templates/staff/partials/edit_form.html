@@ -5,19 +5,22 @@
     <label for="full_name" class="label">
       <span class="label-text font-semibold">Full Name</span>
     </label>
-    <input type="text" name="full_name" id="full_name" class="input input-bordered w-full" required value="{{ staff.full_name }}">
+    <input type="text" name="full_name" id="full_name" class="input input-bordered w-full" required value="{{ form_data.full_name|default:staff.full_name }}">
   </div>
   <div class="form-control mb-4">
     <label for="position" class="label">
       <span class="label-text font-semibold">Position</span>
     </label>
-    <input type="text" name="position" id="position" class="input input-bordered w-full" required value="{{ staff.position }}">
+    <input type="text" name="position" id="position" class="input input-bordered w-full" required value="{{ form_data.position|default:staff.position }}">
   </div>
   <div class="form-control mb-4">
     <label for="email" class="label">
       <span class="label-text font-semibold">Email</span>
     </label>
-    <input type="email" name="email" id="email" class="input input-bordered w-full" required value="{{ staff.email }}">
+    <input type="email" name="email" id="email" class="input input-bordered w-full" required value="{{ form_data.email|default:staff.email }}">
+    {% if error %}
+    <div class="mt-1 text-red-600 text-sm">{{ error }}</div>
+    {% endif %}
   </div>
   <div class="form-control mb-4">
     <label for="role" class="label">
@@ -26,17 +29,16 @@
     <select name="role[]" id="edit-staff-roles" class="select select-bordered w-full" multiple required>
       {% for role in roles %}
         <option value="{{ role.role_id }}"
-          {% if role in staff.role.all %}selected{% endif %}>
+          {% if form_data.roles_selected and role.role_id|stringformat:'s' in form_data.roles_selected or role in staff.role.all %}selected{% endif %}>
           {{ role.role }}
         </option>
       {% endfor %}
     </select>
     <span class="text-xs text-gray-500"></span>
   </div>
+  <input type="hidden" name="page" value="{{ page|default:1 }}">
   <div class="modal-action">
     <button type="submit" class="btn btn-primary">Save</button>
-    <form method="dialog" class="inline">
-      <button type="submit" class="btn">Cancel</button>
-    </form>
+    <button type="button" class="btn" onclick="document.getElementById('edit_staff_modal').close()">Cancel</button>
   </div>
 </form>

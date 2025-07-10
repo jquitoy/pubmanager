@@ -23,11 +23,7 @@ function initMultiSelectTag(containerId) {
         new MultiSelectTag(select.id, {
             required: true,
             placeholder: 'Search roles',
-            onChange: function(selected) {
-                console.log('Selection changed:', selected);
-            }
         });
-        console.log('MultiSelectTag initialized for', select.id);
     }
 }
 

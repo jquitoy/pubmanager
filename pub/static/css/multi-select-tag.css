@@ -72,3 +72,9 @@
 .multi-select-tag .hidden {
     display: none;
 }
+
+
+/* Show placeholder when no tags are selected */
+.multi-select-tag:not(.has-selection) .tag-input::placeholder {
+    opacity: 0 !important;
+}

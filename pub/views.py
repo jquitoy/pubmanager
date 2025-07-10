@@ -75,6 +75,17 @@ def staff_list(request):
         email = request.POST.get('email')
         roles_selected = request.POST.getlist('role[]')
 
+        # Check for duplicate email
+        if Staffs.objects.filter(email=email).exists():
+            data['error'] = 'A staff member with this email already exists.'
+            data['form_data'] = {
+                'full_name': fullName,
+                'position': position,
+                'email': email,
+                'roles_selected': roles_selected
+            }
+            return render(request, 'staff/staffList.html', data)
+
         staff = Staffs.objects.create(
             full_name = fullName,
             position = position,
@@ -84,15 +95,11 @@ def staff_list(request):
         staff.save()
         messages.success(request, 'Staff member added successfully!')
 
-        # Re-paginate after adding
+        # Redirect to last page after adding
         staffs = Staffs.objects.all().order_by('staff_id')
         paginator = Paginator(staffs, 5)
-        page_obj = paginator.get_page(1)
-        data['staffs'] = page_obj.object_list
-        data['page_obj'] = page_obj
-        data['paginator'] = paginator
-
-        return render(request, 'staff/staffList.html', data)
+        last_page = paginator.num_pages
+        return redirect(f'/staff/list/?page={last_page}')
 
     return render(request, 'staff/staffList.html', data)
 
@@ -114,7 +121,6 @@ def staff_edit(request, staffId):
     roles = Roles.objects.all()
     
     if request.method == "POST":
-        # handle form submission
         staffObj = Staffs.objects.get(pk=staffId)
 
         fullName = request.POST.get('full_name')
@@ -122,13 +128,39 @@ def staff_edit(request, staffId):
         email = request.POST.get('email')
         roles_selected = request.POST.getlist('role[]')
 
-        form_data = {
-            'fullName': fullName,
-            'position': position,
-            'email': email,
-            'roles_selected': roles_selected
-        }
+        # Check for duplicate email (exclude current staff)
+        if Staffs.objects.filter(email=email).exclude(pk=staffId).exists():
+            error = 'A staff member with this email already exists.'
+            form_data = {
+                'full_name': fullName,
+                'position': position,
+                'email': email,
+                'roles_selected': roles_selected
+            }
+            context = {"staff": staffObj, "roles": roles, "error": error, "form_data": form_data}
+            if request.headers.get('HX-Request'):
+                return render(request, "staff/partials/edit_form.html", context)
+            else:
+                # For non-HTMX, render the staff list with modal open and error
+                staffs = Staffs.objects.all().order_by('staff_id')
+                all_roles = Roles.objects.all()
+                page_number = 1
+                paginator = Paginator(staffs, 5)
+                page_obj = paginator.get_page(page_number)
+                data = {
+                    'staffCount': staffs.count(),
+                    'staffs': page_obj.object_list,
+                    'roles': all_roles,
+                    'page_obj': page_obj,
+                    'paginator': paginator,
+                    'edit_modal_error': error,
+                    'edit_modal_form_data': form_data,
+                    'edit_modal_staff_id': staffId,
+                    'edit_modal_staff': staffObj
+                }
+                return render(request, 'staff/staffList.html', data)
 
+        page = request.POST.get('page', 1)
         # Update staff if validation passes
         staffObj.full_name = fullName
         staffObj.position = position
@@ -137,12 +169,12 @@ def staff_edit(request, staffId):
         staffObj.save()
         messages.success(request, 'Staff member updated successfully!')
 
-        return redirect('/staff/list')
+        return redirect(f'/staff/list/?page={page}')
     
     if request.headers.get('HX-Request'):
         return render(request, "staff/partials/edit_form.html", {"staff": staff, "roles": roles})
     else:
-        return render(request, "staff/staffEdit.html", {"staff": staff, "roles": roles})
+        return redirect('staff_list')
     
 @login_required
 def staff_delete(request, staffId):

@@ -64,7 +64,8 @@
                                     hx-target="#edit-staff-modal-content"
                                     hx-swap="innerHTML"
                                     hx-trigger="click"
-                                    title="Edit">
+                                    title="Edit"
+                                    onclick="sessionStorage.setItem('lastStaffListUrl', window.location.href)">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400 group-hover:text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-1.414.586H7v-3a2 2 0 01.586-1.414z" />
@@ -144,6 +145,50 @@ function openDeleteModal(staffId, staffName) {
   delete_staff_modal.showModal();
 }
 </script>
+
+{% if error and form_data %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  if (document.getElementById('add_staff_modal')) {
+    add_staff_modal.showModal();
+  }
+});
+</script>
+{% endif %}
+
+{% if edit_modal_error and edit_modal_form_data and edit_modal_staff_id and edit_modal_staff %}
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById('edit_staff_modal')) {
+      document.getElementById('edit-staff-modal-content').innerHTML = `{% include 'staff/partials/edit_form.html' with staff=edit_modal_staff roles=roles error=edit_modal_error form_data=edit_modal_form_data %}`;
+      edit_staff_modal.showModal();
+      // Re-initialize the multi-select dropdown for roles
+      if (typeof initMultiSelectTag === 'function') {
+        initMultiSelectTag('edit-staff-modal-content');
+      }
+    }
+  });
+  </script>
+{% endif %}
+
+<script>
+// Clear edit staff modal fields and error when closed, and redirect to last staff list URL if set
+if (document.getElementById('edit_staff_modal')) {
+  document.getElementById('edit_staff_modal').addEventListener('close', function() {
+    var lastUrl = sessionStorage.getItem('lastStaffListUrl');
+    if (lastUrl) {
+      window.location.href = lastUrl;
+      sessionStorage.removeItem('lastStaffListUrl');
+    } else {
+      var modalContent = document.getElementById('edit-staff-modal-content');
+      if (modalContent) {
+        modalContent.innerHTML = '';
+      }
+    }
+  });
+}
+</script>
+
 {% endblock %}
 <!-- End of <body> -->
 
