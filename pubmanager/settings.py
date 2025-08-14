@@ -78,7 +78,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'pubmanager_db',
-        'PORT': '3307',
+        'PORT': '3306',
         'USER': 'root',
         'PASSWORD': '',
     }
