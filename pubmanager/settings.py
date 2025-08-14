@@ -38,8 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-	'crispy_forms',
-	'crispy_tailwind',
 ]
 
 MIDDLEWARE = [
@@ -128,9 +126,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# For Tailwind (recommended for your setup)
-CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
-CRISPY_TEMPLATE_PACK = "tailwind"
+
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/calendar/'  # or your desired default page
