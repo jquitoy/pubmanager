@@ -34,9 +34,11 @@ class Tasks(models.Model):
 
   OBSERVANCE = 'OBS'
   COVERAGE = 'COV'
+  SEGMENT = 'SEG'
   TASK_TYPE_CHOICES = [
       (OBSERVANCE, 'Observance'),
       (COVERAGE, 'Coverage'),
+      (SEGMENT, 'Segment'),
   ]
 
   STATUS_CHOICES = [
