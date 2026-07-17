@@ -1,0 +1,12 @@
+{
+  "outputDirectory": "staticfiles",
+  "functions": {
+    "pubmanager/wsgi.py": {
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [
+    { "source": "/static/(.*)", "destination": "/static/$1" },
+    { "source": "/(.*)", "destination": "pubmanager/wsgi.py" }
+  ]
+}
