@@ -14,6 +14,11 @@ import os
 import re
 from pathlib import Path
 
+# Use PyMySQL as the MySQL driver (pure Python, works on Vercel without C deps)
+import pymysql
+pymysql.install_as_MySQLdb()
+import certifi
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -95,9 +100,10 @@ if DATABASE_URL:
                 'charset': 'utf8mb4',
             },
         }
-        # Enable required SSL for cloud databases (TiDB, PlanetScale, etc.)
+        # TiDB Serverless requires a CA cert for SSL (uses Let's Encrypt)
+        # certifi provides the Mozilla CA bundle that includes the LE root
         if host != 'localhost' and host != '127.0.0.1':
-            db_config['OPTIONS']['ssl_mode'] = 'REQUIRED'
+            db_config['OPTIONS']['ssl'] = {'ca': certifi.where()}
         DATABASES = {'default': db_config}
     else:
         DATABASES = {
