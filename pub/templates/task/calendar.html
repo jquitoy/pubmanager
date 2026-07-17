@@ -340,9 +340,25 @@ document.body.addEventListener('htmx:afterSettle', initStaffRoleModals);
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  const makeWebhookUrl = "https://hook.us2.make.com/u1lim7ga3y77ppzajhkc845lropo2cvt";
+  const makeWebhookUrl = "{% url 'sync_google_calendar' %}";
+  const csrfToken = getCookie('csrftoken');
   const addTaskForm = document.querySelector('#add_task_modal form');
   const editTaskForm = document.querySelector('#edit_task_modal form');
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
   
   if (addTaskForm) {
     let isSubmittingToMake = false;
@@ -447,12 +463,17 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
           const response = await fetch(makeWebhookUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrfToken
+            },
             body: JSON.stringify(data)
           });
           const responseText = await response.text();
           
           if (!response.ok) {
+            console.error('Google Calendar sync failed:', response.status, responseText);
             throw new Error('Failed to sync with Google Calendar');
           }
 
@@ -511,12 +532,17 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
           const response = await fetch(makeWebhookUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrfToken
+            },
             body: JSON.stringify(deleteData)
           });
           const responseText = await response.text();
           
           if (!response.ok) {
+            console.error('Google Calendar delete failed:', response.status, responseText);
             throw new Error('Failed to delete from Google Calendar');
           }
 
@@ -612,12 +638,17 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
           const response = await fetch(makeWebhookUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrfToken
+            },
             body: JSON.stringify(data)
           });
           const responseText = await response.text();
           
           if (!response.ok) {
+            console.error('Google Calendar sync failed:', response.status, responseText);
             throw new Error('Failed to sync with Google Calendar');
           }
 

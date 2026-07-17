@@ -1,7 +1,9 @@
 import json
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseNotAllowed, HttpResponseBadRequest, HttpResponseServerError
 from django.views.decorators.http import require_GET
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
 # from .forms import RoleForm, StaffForm, TaskWithAssignmentForm
 from .models import Roles, Staffs, Tasks, Assignments
 from django.db.models import Count, Q
@@ -484,6 +486,33 @@ def calendar(request):
         return redirect('/calendar')
 
     return render(request, 'task/calendar.html', data)
+
+@login_required
+def sync_google_calendar(request):
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except json.JSONDecodeError:
+        return HttpResponseBadRequest(json.dumps({'error': 'Invalid JSON payload'}), content_type='application/json')
+
+    webhook_url = 'https://hook.us2.make.com/u1lim7ga3y77ppzajhkc845lropo2cvt'
+    request_data = json.dumps(payload).encode('utf-8')
+    req = Request(webhook_url, data=request_data, headers={'Content-Type': 'application/json'}, method='POST')
+
+    try:
+        with urlopen(req, timeout=30) as resp:
+            body = resp.read()
+            return HttpResponse(body, content_type=resp.headers.get('Content-Type', 'application/json'), status=resp.getcode())
+    except HTTPError as error:
+        body = error.read()
+        if not body:
+            body = json.dumps({'error': 'Make webhook returned an error.', 'status': error.code}).encode('utf-8')
+        return HttpResponse(body, content_type='application/json', status=error.code)
+    except URLError as error:
+        error_response = json.dumps({'error': f'Unable to reach Make webhook: {error.reason}'}).encode('utf-8')
+        return HttpResponseServerError(error_response, content_type='application/json')
 
 @login_required
 def task_edit(request, taskId):
