@@ -79,22 +79,26 @@ WSGI_APPLICATION = 'pubmanager.wsgi.application'
 DATABASE_URL = os.environ.get('DATABASE_URL', '')
 
 if DATABASE_URL:
-    # Parse mysql://user:password@host:port/dbname
-    match = re.match(r'mysql://([^:]+):([^@]+)@([^:]+):(\d+)/(.+)', DATABASE_URL)
+    # Parse mysql://user:password@host:port/dbname (with optional ?query=params)
+    # TiDB enforces TLS server-side, so no extra SSL config needed
+    match = re.match(r'mysql://([^:]+):([^@]+)@([^:]+):(\d+)/([^?]+)', DATABASE_URL)
     if match:
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.mysql',
-                'NAME': match.group(5),
-                'USER': match.group(1),
-                'PASSWORD': match.group(2),
-                'HOST': match.group(3),
-                'PORT': match.group(4),
-                'OPTIONS': {
-                    'charset': 'utf8mb4',
-                },
-            }
+        host = match.group(3)
+        db_config = {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': match.group(5),
+            'USER': match.group(1),
+            'PASSWORD': match.group(2),
+            'HOST': host,
+            'PORT': int(match.group(4)),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+            },
         }
+        # Enable required SSL for cloud databases (TiDB, PlanetScale, etc.)
+        if host != 'localhost' and host != '127.0.0.1':
+            db_config['OPTIONS']['ssl_mode'] = 'REQUIRED'
+        DATABASES = {'default': db_config}
     else:
         DATABASES = {
             'default': {
