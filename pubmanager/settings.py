@@ -11,8 +11,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 import os
-import re
 from pathlib import Path
+from urllib.parse import parse_qs, unquote, urlsplit
 
 # Use PyMySQL as the MySQL driver (pure Python, works on Vercel without C deps)
 import pymysql
@@ -81,42 +81,16 @@ WSGI_APPLICATION = 'pubmanager.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASE_URL = os.environ.get('DATABASE_URL', '')
 
-if DATABASE_URL:
-    # Parse mysql://user:password@host:port/dbname (with optional ?query=params)
-    # TiDB enforces TLS server-side, so no extra SSL config needed
-    match = re.match(r'mysql://([^:]+):([^@]+)@([^:]+):(\d+)/([^?]+)', DATABASE_URL)
-    if match:
-        host = match.group(3)
-        db_config = {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': match.group(5),
-            'USER': match.group(1),
-            'PASSWORD': match.group(2),
-            'HOST': host,
-            'PORT': int(match.group(4)),
-            'OPTIONS': {
-                'charset': 'utf8mb4',
-            },
-        }
-        # TiDB Serverless requires a CA cert for SSL (uses Let's Encrypt)
-        # certifi provides the Mozilla CA bundle that includes the LE root
-        if host != 'localhost' and host != '127.0.0.1':
-            db_config['OPTIONS']['ssl'] = {'ca': certifi.where()}
-        DATABASES = {'default': db_config}
-    else:
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.mysql',
-                'NAME': 'pubmanager_db',
-                'PORT': '3307',
-                'USER': 'root',
-                'PASSWORD': '',
-            }
-        }
-else:
-    DATABASES = {
+def build_database_config(database_url):
+    """Build a Django MySQL config from a mysql:// URL.
+
+    Remote TiDB/Vercel URLs often include query params like sslmode=require,
+    which are not valid kwargs for the MySQL Python connector. Strip those
+    unsupported options and keep the TLS config in the supported ssl dict.
+    """
+
+    fallback = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
             'NAME': 'pubmanager_db',
@@ -125,6 +99,50 @@ else:
             'PASSWORD': '',
         }
     }
+
+    if not database_url:
+        return fallback
+
+    parsed = urlsplit(database_url)
+    if parsed.scheme not in {'mysql', 'mysql+mysqlconnector', 'mysql+pymysql'}:
+        return fallback
+
+    host = parsed.hostname or 'localhost'
+    db_name = parsed.path.lstrip('/') or 'pubmanager_db'
+    user = unquote(parsed.username or '')
+    password = unquote(parsed.password or '')
+    port = parsed.port or 3306
+
+    config = {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': db_name,
+        'USER': user,
+        'PASSWORD': password,
+        'HOST': host,
+        'PORT': port,
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+        },
+    }
+
+    query_params = parse_qs(parsed.query, keep_blank_values=True)
+    ssl_values = {}
+    for key in ('ca', 'cert', 'key'):
+        value = query_params.get(f'ssl-{key}') or query_params.get(f'ssl_{key}')
+        if value:
+            ssl_values[key] = value[0]
+
+    if host not in {'localhost', '127.0.0.1'}:
+        ssl_values.setdefault('ca', certifi.where())
+
+    if ssl_values:
+        config['OPTIONS']['ssl'] = ssl_values
+
+    return {'default': config}
+
+
+DATABASE_URL = os.environ.get('DATABASE_URL', '')
+DATABASES = build_database_config(DATABASE_URL)
 
 
 # Password validation
