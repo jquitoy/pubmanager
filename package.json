@@ -1,7 +1,7 @@
 {
   "scripts": {
-    "tailwind": "@tailwindcss -i ./src/input.css -o ./pub/static/css/output.css --watch",
-    "build": "npx @tailwindcss/cli -i ./src/input.css -o ./pub/static/css/output.css --minify && python manage.py collectstatic --noinput"
+    "tailwind": "@tailwindcss -i ./src/input.css -o ./public/static/css/output.css --watch",
+    "build": "node -e \"const fs=require('fs'); const path=require('path'); const src='pub/static'; const dest='public/static'; fs.rmSync(dest,{recursive:true,force:true}); fs.mkdirSync(dest,{recursive:true}); fs.cpSync(src,dest,{recursive:true});\" && npx @tailwindcss/cli -i ./src/input.css -o ./public/static/css/output.css --minify && python manage.py collectstatic --noinput"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.17",

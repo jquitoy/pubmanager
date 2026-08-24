@@ -12,9 +12,7 @@
     }
   ],
   "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "pubmanager/wsgi.py"
-    }
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "pubmanager/wsgi.py" }
   ]
 }
