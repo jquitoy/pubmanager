@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "installCommand": "python -m pip install --upgrade pip && pip install -r requirements.txt && npm install",
+  "buildCommand": "npm run build",
   "builds": [
     {
       "src": "pubmanager/wsgi.py",
@@ -12,7 +14,7 @@
   "routes": [
     {
       "src": "/static/(.*)",
-      "dest": "/static/$1"
+      "dest": "pubmanager/wsgi.py"
     },
     {
       "src": "/(.*)",
