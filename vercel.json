@@ -1,12 +1,22 @@
 {
-  "outputDirectory": "staticfiles",
-  "functions": {
-    "pubmanager/wsgi.py": {
-      "maxDuration": 60
+  "version": 2,
+  "builds": [
+    {
+      "src": "pubmanager/wsgi.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "15mb"
+      }
     }
-  },
-  "rewrites": [
-    { "source": "/static/(.*)", "destination": "/static/$1" },
-    { "source": "/(.*)", "destination": "pubmanager/wsgi.py" }
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "pubmanager/wsgi.py"
+    }
   ]
 }
