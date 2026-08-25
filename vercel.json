@@ -4,6 +4,13 @@
   "buildCommand": "npm run build",
   "builds": [
     {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "public"
+      }
+    },
+    {
       "src": "pubmanager/wsgi.py",
       "use": "@vercel/python",
       "config": {
