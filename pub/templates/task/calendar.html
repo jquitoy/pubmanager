@@ -452,6 +452,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const data = {
           action: 'add',
+          task_id: null,
           title: formData.get('title'),
           description: finalDescriptionForMake,
           deadline: formData.get('deadline'),
@@ -465,33 +466,32 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Final data being sent to Make.com:', JSON.stringify(data, null, 2));
 
         try {
-          const response = await fetch(makeWebhookUrl, {
+          const saveResponse = await fetch(window.location.pathname, {
             method: 'POST',
             credentials: 'same-origin',
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-CSRFToken': csrfToken
+            },
+            body: formData
+          });
+          if (!saveResponse.ok) {
+            throw new Error('Failed to save task');
+          }
+
+          const savedTask = await saveResponse.json();
+          data.task_id = savedTask.task_id;
+          fetch(makeWebhookUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            keepalive: true,
             headers: {
               'Content-Type': 'application/json',
               'X-CSRFToken': csrfToken
             },
             body: JSON.stringify(data)
-          });
-          const responseText = await response.text();
-          
-          if (!response.ok) {
-            console.error('Google Calendar sync failed:', response.status, responseText);
-            throw new Error('Failed to sync with Google Calendar');
-          }
-
-          // Parse the response to get the Google Calendar event ID
-          try {
-            const responseData = JSON.parse(responseText);
-            if (responseData.google_event_id) {
-              document.querySelector('#add_task_modal [name="google_event_id"]').value = responseData.google_event_id;
-            }
-          } catch (parseError) {
-            // Ignore parse errors
-          }
-
-          addTaskForm.submit();
+          }).catch(error => console.error('Google Calendar sync failed:', error));
+          window.location.href = '/calendar/';
         } catch (err) {
           isSubmittingToMake = false;
           alert('Failed to sync with Google Calendar. Please try again.');

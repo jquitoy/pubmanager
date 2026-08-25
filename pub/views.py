@@ -483,6 +483,8 @@ def calendar(request):
                         role=Roles.objects.get(pk=role_id).role_id
                     )
             messages.success(request, 'Task added successfully!')
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'task_id': task.pk})
         return redirect('/calendar')
 
     return render(request, 'task/calendar.html', data)
@@ -500,17 +502,51 @@ def sync_google_calendar(request):
     webhook_url = 'https://hook.us2.make.com/u1lim7ga3y77ppzajhkc845lropo2cvt'
     request_data = json.dumps(payload).encode('utf-8')
     req = Request(webhook_url, data=request_data, headers={'Content-Type': 'application/json'}, method='POST')
+    task_id = payload.get('task_id')
+    if task_id:
+        Tasks.objects.filter(pk=task_id).update(
+            google_sync_status='SYNCING',
+            google_sync_error='',
+        )
 
     try:
         with urlopen(req, timeout=30) as resp:
             body = resp.read()
+            try:
+                response_data = json.loads(body.decode('utf-8'))
+                task_id = payload.get('task_id')
+                google_event_id = response_data.get('google_event_id')
+                if task_id:
+                    update_data = {
+                        'google_sync_status': 'SYNCED' if google_event_id else 'FAILED',
+                        'google_sync_error': '' if google_event_id else 'Make returned no Google event ID.',
+                    }
+                    if google_event_id:
+                        update_data['google_event_id'] = google_event_id
+                    Tasks.objects.filter(pk=task_id).update(**update_data)
+            except (UnicodeDecodeError, json.JSONDecodeError, AttributeError):
+                if task_id:
+                    Tasks.objects.filter(pk=task_id).update(
+                        google_sync_status='FAILED',
+                        google_sync_error='Make returned an invalid response.',
+                    )
             return HttpResponse(body, content_type=resp.headers.get('Content-Type', 'application/json'), status=resp.getcode())
     except HTTPError as error:
         body = error.read()
+        if payload.get('task_id'):
+            Tasks.objects.filter(pk=payload['task_id']).update(
+                google_sync_status='FAILED',
+                google_sync_error=f'Make returned HTTP {error.code}.',
+            )
         if not body:
             body = json.dumps({'error': 'Make webhook returned an error.', 'status': error.code}).encode('utf-8')
         return HttpResponse(body, content_type='application/json', status=error.code)
     except URLError as error:
+        if payload.get('task_id'):
+            Tasks.objects.filter(pk=payload['task_id']).update(
+                google_sync_status='FAILED',
+                google_sync_error=f'Unable to reach Make: {error.reason}',
+            )
         error_response = json.dumps({'error': f'Unable to reach Make webhook: {error.reason}'}).encode('utf-8')
         return HttpResponseServerError(error_response, content_type='application/json')
 

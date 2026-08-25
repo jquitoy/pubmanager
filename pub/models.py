@@ -59,6 +59,8 @@ class Tasks(models.Model):
       default='WORKING'
   )
   google_event_id = models.CharField(max_length=255, blank=True, null=True)  # For Google Calendar integration
+  google_sync_status = models.CharField(max_length=20, default='PENDING')
+  google_sync_error = models.TextField(blank=True, default='')
 
 
 class Assignments(models.Model):
