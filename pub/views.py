@@ -1,10 +1,16 @@
 import json
+import re
+import truststore
+from datetime import date, datetime
+from io import BytesIO
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse, HttpResponseNotAllowed, HttpResponseBadRequest, HttpResponseServerError
 from django.views.decorators.http import require_GET
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
-# from .forms import RoleForm, StaffForm, TaskWithAssignmentForm
+from openpyxl import load_workbook
+
+truststore.inject_into_ssl()
 from .models import Roles, Staffs, Tasks, Assignments
 from django.db.models import Count, Q
 from django.core.serializers.json import DjangoJSONEncoder
@@ -289,24 +295,36 @@ def role_delete(request, roleId):
 @login_required
 def task_add(request):
     if request.method == 'POST':
-        form = TaskWithAssignmentForm(request.POST)
-        # Only validate if the submit button was pressed
-        if form.is_valid():
-            task = form.save(commit=False)
-            task.save()
-            staff_member = form.cleaned_data['staff']
-            role = form.cleaned_data['role']
-            Assignments.objects.create(
-                task=task,
-                staff=staff_member,
-                role=role.role_id
-            )
-            messages.success(request, 'Task added successfully!')
-            return redirect('task_add')
-        # If not a real submission, just render the form with filtered staff
-    else:
-        form = TaskWithAssignmentForm()
-    return render(request, 'task/taskAdd.html', {'form': form})
+        task_type = (request.POST.get('task_type') or request.POST.get('type') or '').strip().upper()
+        title = (request.POST.get('title') or '').strip()
+        deadline = request.POST.get('deadline')
+        description = (request.POST.get('description') or '').strip()
+        role_id = request.POST.get('role')
+        staff_id = request.POST.get('staff')
+        errors = []
+        if not title:
+            errors.append('Title is required.')
+        if task_type not in dict(Tasks.TASK_TYPE_CHOICES):
+            errors.append('Task type must be OBS, COV, or SEG.')
+        if not deadline:
+            errors.append('Deadline is required.')
+        if not role_id or not staff_id:
+            errors.append('Role and staff are required.')
+        if errors:
+            return render(request, 'task/taskAdds.html', {'roles': Roles.objects.all(), 'errors': errors})
+
+        task = Tasks.objects.create(
+            title=title,
+            task_type=task_type,
+            deadline=deadline,
+            description=description,
+            status='PENDING',
+        )
+        Assignments.objects.create(task=task, staff_id=staff_id, role=role_id)
+        messages.success(request, 'Task added successfully!')
+        return redirect('task_add')
+
+    return render(request, 'task/taskAdds.html', {'roles': Roles.objects.all()})
 
 @login_required
 def load_staffs(request):
@@ -358,7 +376,7 @@ def calendar(request):
                 "assignments": [
                     {
                         "staff_id": assignment.staff.staff_id,
-                        "role_id": int(assignment.role) if str(assignment.role).isdigit() else assignment.role,
+                        "role_id": int(assignment.role) if str(assignment.role).isdigit() else _role_id_for_import_label(assignment.role),
                     }
                     for assignment in assignments.filter(task=task)
                 ]
@@ -408,6 +426,13 @@ def calendar(request):
         'assignments': assignments,
         'roles': roles,
         'staff_by_role_json': json.dumps(staff_by_role, cls=DjangoJSONEncoder),
+        'staff_names_json': json.dumps([
+            {
+                'full_name': staff.full_name,
+                'last_name': staff.full_name.strip().split()[-1] if staff.full_name.strip() else '',
+            }
+            for staff in staffs
+        ], cls=DjangoJSONEncoder),
         "events_json": json.dumps(events, cls=DjangoJSONEncoder),
         "Tasks": Tasks,
         "tasksPending": tasksPending,
@@ -488,6 +513,291 @@ def calendar(request):
         return redirect('/calendar')
 
     return render(request, 'task/calendar.html', data)
+
+
+def _google_payload_for_task(task):
+    assignments = Assignments.objects.filter(task=task).select_related('staff')
+    attendees = [
+        {'email': assignment.staff.email}
+        for assignment in assignments
+        if assignment.staff.email
+    ]
+    staff_role_summary = '\n'.join(
+        f'{Roles.objects.filter(pk=assignment.role).values_list("role", flat=True).first() or assignment.role} - {assignment.staff.full_name}'
+        for assignment in assignments
+    )
+    description = task.description or ''
+    task_summary = f'{task.task_type} {task.status}'
+    description = f'{task_summary}\n{description}' if description else task_summary
+    if staff_role_summary:
+        description = f'{description}\n\n{staff_role_summary}'
+    return {
+        'action': 'edit' if task.google_event_id else 'add',
+        'task_id': task.pk,
+        'title': task.title,
+        'description': description,
+        'deadline': task.deadline.isoformat(),
+        'task_type': task.task_type,
+        'status': 'POSTED',
+        'task_status': task.status,
+        'google_event_id': task.google_event_id,
+        'staff_role_summary': staff_role_summary,
+        'attendees': attendees,
+        'create_if_not_exists': not bool(task.google_event_id),
+    }
+
+
+def _sync_task_to_google(task):
+    webhook_url = 'https://hook.us2.make.com/u1lim7ga3y77ppzajhkc845lropo2cvt'
+    request_data = json.dumps(_google_payload_for_task(task)).encode('utf-8')
+    req = Request(webhook_url, data=request_data, headers={'Content-Type': 'application/json'}, method='POST')
+    task.google_sync_status = 'SYNCING'
+    task.google_sync_error = ''
+    task.save(update_fields=['google_sync_status', 'google_sync_error'])
+    try:
+        with urlopen(req, timeout=30) as response:
+            response_body = response.read()
+            response_data = json.loads(response_body.decode('utf-8'))
+            google_event_id = response_data.get('google_event_id')
+            task.google_event_id = google_event_id or task.google_event_id
+            task.google_sync_status = 'SYNCED' if google_event_id else 'FAILED'
+            task.google_sync_error = '' if google_event_id else 'Make returned no Google event ID.'
+            task.save(update_fields=['google_event_id', 'google_sync_status', 'google_sync_error'])
+            return response_body, response.headers.get('Content-Type', 'application/json')
+    except HTTPError as error:
+        response_body = error.read().decode('utf-8', errors='replace').strip()
+        task.google_sync_status = 'FAILED'
+        task.google_sync_error = f'Make returned HTTP {error.code}: {response_body or "Bad Request"}'
+        task.save(update_fields=['google_sync_status', 'google_sync_error'])
+        raise
+    except (URLError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        task.google_sync_status = 'FAILED'
+        task.google_sync_error = str(error)
+        task.save(update_fields=['google_sync_status', 'google_sync_error'])
+        raise
+
+
+def _excel_date(value, default_year=None):
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    value = str(value).strip()
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        schedule_date = re.sub(r'\s*\([^)]*\)', '', value).strip()
+        if not default_year:
+            raise ValueError('deadline must be YYYY-MM-DD or include a year')
+        return datetime.strptime(f'{schedule_date} {default_year}', '%B %d %Y').date()
+
+
+def _match_staff_by_last_name(name):
+    name_parts = str(name or '').strip().split(':')[-1].strip().split()
+    last_name = name_parts[-1].lower() if name_parts else ''
+    initial = name_parts[0].replace('.', '').lower() if name_parts and name_parts[0].endswith('.') else ''
+    matches = [
+        staff for staff in Staffs.objects.all()
+        if staff.full_name.strip().split()
+        and staff.full_name.strip().split()[-1].lower() == last_name
+        and (not initial or staff.full_name.strip().split()[0].lower().startswith(initial))
+    ]
+    if not matches:
+        qualifier = f' with first initial "{initial.upper()}"' if initial else ''
+        raise ValueError(f'No staff member with last name "{last_name}"{qualifier} exists')
+    if len(matches) > 1:
+        raise ValueError(f'Staff reference "{name}" matches multiple staff members')
+    return matches[0]
+
+
+def _role_id_for_import_label(label):
+    aliases = {
+        'pj': 'Photojournalist',
+        'writer': 'Writer',
+        'layout': 'Layout Artist',
+        'artist': 'Artist',
+    }
+    role_name = aliases.get(str(label or '').strip().lower(), str(label or '').strip())
+    role = Roles.objects.filter(role__iexact=role_name).first()
+    if not role:
+        raise ValueError(f'Role "{label}" does not exist in the system')
+    return role.role_id
+
+
+def _find_import_header_row(worksheet):
+    for row_number, row in enumerate(worksheet.iter_rows(values_only=True), start=1):
+        headers = [str(cell or '').strip().lower() for cell in row]
+        if 'schedule' in headers and 'activities' in headers:
+            return row_number, headers, 'founders'
+        if 'deadline' in headers and 'to post/pubmats' in headers:
+            return row_number, headers, 'hse'
+    return None, [], None
+
+
+@login_required
+def import_tasks(request):
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+    uploaded_file = request.FILES.get('task_file')
+    if not uploaded_file or not uploaded_file.name.lower().endswith('.xlsx'):
+        messages.error(request, 'Please upload an Excel .xlsx file.')
+        return redirect('calendar')
+    try:
+        task_overrides = {
+            str(item.get('importIndex')): item
+            for item in json.loads(request.POST.get('task_overrides') or '[]')
+            if isinstance(item, dict)
+        }
+    except (TypeError, ValueError, json.JSONDecodeError):
+        task_overrides = {}
+
+    created_tasks = []
+    errors = []
+    try:
+        workbook = load_workbook(filename=BytesIO(uploaded_file.read()), data_only=True)
+        worksheet = workbook.active
+        merged_values = {}
+        for merged_range in worksheet.merged_cells.ranges:
+            top_left_value = worksheet.cell(merged_range.min_row, merged_range.min_col).value
+            for merged_row in range(merged_range.min_row, merged_range.max_row + 1):
+                for merged_column in range(merged_range.min_col, merged_range.max_col + 1):
+                    merged_values[(merged_row, merged_column)] = top_left_value
+        header_row_number, headers, tracker_format = _find_import_header_row(worksheet)
+        is_tracker = tracker_format is not None
+        if not is_tracker:
+            worksheet = workbook.active
+            rows = worksheet.iter_rows(values_only=True)
+            headers = [str(cell or '').strip().lower() for cell in next(rows)]
+            required_headers = {'title', 'task_type', 'deadline'}
+            missing_headers = required_headers - set(headers)
+            if missing_headers:
+                raise ValueError(f'Missing columns: {", ".join(sorted(missing_headers))}')
+        else:
+            schedule_column = headers.index('schedule') if tracker_format == 'founders' else headers.index('deadline')
+            title_column = headers.index('activities') if tracker_format == 'founders' else headers.index('to post/pubmats')
+            venue_column = headers.index('time & venue') if 'time & venue' in headers else None
+            status_column = headers.index('checklist') if 'checklist' in headers else None
+            assigned_column = headers.index('assigned person:') if 'assigned person:' in headers else None
+            file_link_column = headers.index('file link') if 'file link' in headers else len(headers)
+            role_row_number = header_row_number + 1
+            role_row = next(worksheet.iter_rows(min_row=role_row_number, max_row=role_row_number, values_only=True), ())
+            if tracker_format == 'hse':
+                assigned_column = headers.index('assigned person:')
+            role_start_column = (assigned_column or 1) - (2 if tracker_format == 'hse' else 1)
+            role_columns = {
+                column_index: str(role_row[column_index]).strip()
+                for column_index in range(max(0, role_start_column), file_link_column)
+                if column_index < len(role_row) and str(role_row[column_index] or '').strip()
+            }
+            tracker_year_match = re.search(r'20\d{2}', uploaded_file.name)
+            tracker_year = int(tracker_year_match.group()) if tracker_year_match else None
+            if not tracker_year:
+                raise ValueError('Could not determine the year from the tracker filename.')
+
+        start_row = header_row_number + 2 if is_tracker and tracker_format == 'hse' else header_row_number + 1 if is_tracker else 2
+        import_index = 0
+        for row_number, row in enumerate(worksheet.iter_rows(min_row=start_row, values_only=True), start=start_row):
+            row = tuple(merged_values.get((row_number, column_number), value) for column_number, value in enumerate(row, start=1))
+            values = dict(zip(headers, row))
+            if not any(value is not None and str(value).strip() for value in row):
+                continue
+            try:
+                matched_staff = []
+                if is_tracker:
+                    title = str(row[title_column] or '').strip()
+                    if not row[schedule_column] or not title:
+                        continue
+                    task_type = 'OBS'
+                    status = str(row[status_column] or 'PENDING').strip().upper() if status_column is not None else 'PENDING'
+                    status = {'POSTED': 'POSTED', 'PENDING': 'PENDING'}.get(status, status)
+                    description = str(row[venue_column] or '').strip() if venue_column is not None else ''
+                    if assigned_column is not None:
+                        assigned_people = [
+                            (str(value).strip(), role_columns.get(column_index, ''))
+                            for column_index, value in enumerate(row, start=0)
+                            if column_index in role_columns and value is not None and str(value).strip()
+                        ]
+                        matched_staff = [
+                            (_match_staff_by_last_name(person), _role_id_for_import_label(role))
+                            for person, role in assigned_people
+                        ]
+                        if matched_staff:
+                            description = f'{description}\nAssigned: {", ".join(f"{staff.full_name} ({role})" for staff, role in matched_staff)}'.strip()
+                    deadline = _excel_date(row[schedule_column], tracker_year)
+                else:
+                    task_type = str(values.get('task_type') or '').strip().upper()
+                    status = str(values.get('status') or 'PENDING').strip().upper()
+                    title = str(values.get('title') or '').strip()
+                    description = str(values.get('description') or '').strip()
+                    deadline = _excel_date(values.get('deadline'))
+                    matched_staff = []
+                override = task_overrides.get(str(import_index))
+                import_index += 1
+                if override:
+                    title = str(override.get('title') or title).strip()
+                    description = description
+                    deadline = _excel_date(override.get('date'))
+                    status = str(override.get('status') or status).strip().upper()
+                    description = str(override.get('description') or description).strip()
+                    if 'people' in override:
+                        matched_staff = []
+                        edited_people = [person.strip() for person in str(override.get('people') or '').split(',') if person.strip()]
+                        for person in edited_people:
+                            person_name, _, role_name = person.rpartition('(')
+                            role_name = role_name.rstrip(')').strip() if _ else 'IMPORT'
+                            matched_staff.append((_match_staff_by_last_name(person_name.strip() if _ else person), _role_id_for_import_label(role_name)))
+                if task_type not in dict(Tasks.TASK_TYPE_CHOICES):
+                    raise ValueError('task_type must be OBS, COV, or SEG')
+                if status not in dict(Tasks.STATUS_CHOICES):
+                    raise ValueError('status is invalid')
+                if not title:
+                    raise ValueError('title is required')
+                task = Tasks.objects.create(
+                    title=title,
+                    task_type=task_type,
+                    deadline=deadline,
+                    description=description,
+                    status=status,
+                )
+                for staff, role in matched_staff:
+                    Assignments.objects.create(task=task, staff=staff, role=role)
+                _sync_task_to_google(task)
+                created_tasks.append(task)
+            except (TypeError, ValueError, HTTPError, URLError, UnicodeDecodeError, json.JSONDecodeError) as error:
+                errors.append(f'Row {row_number}: {error}')
+    except Exception as error:
+        messages.error(request, f'Import failed: {error}')
+        return redirect('calendar')
+
+    if created_tasks:
+        messages.success(request, f'{len(created_tasks)} task(s) imported and sent to Google Calendar.')
+    if errors:
+        messages.warning(request, 'Some rows were skipped: ' + ' | '.join(errors[:5]))
+    return redirect('calendar')
+
+
+@login_required
+def resync_unsynced_tasks(request):
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+
+    tasks = Tasks.objects.exclude(google_sync_status='SYNCED')
+    synced_count = 0
+    errors = []
+    for task in tasks:
+        try:
+            _sync_task_to_google(task)
+            synced_count += 1
+        except Exception as error:
+            errors.append(f'{task.title}: {error}')
+
+    if synced_count:
+        messages.success(request, f'{synced_count} unsynced task(s) sent to Google Calendar.')
+    if errors:
+        messages.warning(request, 'Some tasks could not be synced: ' + ' | '.join(errors[:3]))
+    if not synced_count and not errors:
+        messages.info(request, 'All tasks are already synced to Google Calendar.')
+    return redirect('calendar')
 
 @login_required
 def sync_google_calendar(request):

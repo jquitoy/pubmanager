@@ -24,6 +24,8 @@ urlpatterns = [
 	path('load_staffs/', views.load_staffs, name="load_staffs"),
 
 	path('calendar/', views.calendar, name='calendar'),
+	path('calendar/import/', views.import_tasks, name='import_tasks'),
+	path('calendar/resync/', views.resync_unsynced_tasks, name='resync_unsynced_tasks'),
 	path('calendar/sync-google/', views.sync_google_calendar, name='sync_google_calendar'),
 	path('task/edit/<int:taskId>', views.task_edit, name='task_edit'),
 	# path('task/delete/<int:taskId>', views.task_delete, name='task_delete'),

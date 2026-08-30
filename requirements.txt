@@ -1,5 +1,7 @@
 Django==4.2.8
 PyMySQL==1.1.1
-certifi==2024.12.14
+certifi==2026.7.22
 whitenoise==6.8.2
+openpyxl==3.1.5
+truststore==0.10.4
 

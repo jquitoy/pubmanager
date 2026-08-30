@@ -1,14 +1,11 @@
-{% extends "layout/base.html" %} 
-
-{% load static %} 
-
-{% block 'title'%}Calendar{%endblock 'title' %} 
-
-{% block 'page_head' %}
+{% extends "layout/base.html" %}
+{% load static %}
+{% block title %}Calendar{% endblock title %}
+{% block page_head %}
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.17/index.global.min.js"></script>
-{% endblock 'page_head' %}
-
-{% block 'content' %}
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+{% endblock page_head %}
+{% block content %}
 
 <style>
   /* Responsive full height for main content */
@@ -22,11 +19,17 @@
     display: flex;
     flex-direction: column;
     justify-content: stretch;
+    min-height: 0;
   }
   @media (min-width: 1024px) {
     .calendar-content-area {
       height: 100%;
     }
+  }
+  .pending-tasks-panel {
+    min-height: 0;
+    max-height: calc(100vh - 300px);
+    overflow-y: auto;
   }
 </style>
 
@@ -34,87 +37,247 @@
   <div class="hidden lg:block calendar-content-area">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5 md:gap-6">
       <!-- Metric Item Start -->
-      <div class="rounded-box border-2 border-base-300 bg-base-100  dark:border-gray-800 dark:bg-white/[0.03] md:p-6 flex flex-col items-start">
+      <div
+        class="rounded-box border-2 border-base-300 bg-base-100 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 flex flex-col items-start"
+      >
         <div class="flex flex-col items-start">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl text-success">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-9 text-success">
-              <path fill-rule="evenodd" d="M9 1.5H5.625c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5Zm6.61 10.936a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 14.47a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" />
-              <path d="M12.971 1.816A5.23 5.23 0 0 1 14.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 0 1 3.434 1.279 9.768 9.768 0 0 0-6.963-6.963Z" />
+          <div
+            class="flex h-12 w-12 items-center justify-center rounded-xl text-success"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              class="size-9 text-success"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M9 1.5H5.625c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5Zm6.61 10.936a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 14.47a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"
+                clip-rule="evenodd"
+              />
+              <path
+                d="M12.971 1.816A5.23 5.23 0 0 1 14.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 0 1 3.434 1.279 9.768 9.768 0 0 0-6.963-6.963Z"
+              />
             </svg>
           </div>
           <div class="mt-3 flex flex-col items-start w-full">
             <span class="text-md text-base-content">Tasks Completed</span>
-            <h4 class="mt-2 text-2xl md:text-3xl font-bold text-base-content/90">{{ taskPostedCount }}</h4>
+            <h4
+              class="mt-2 text-2xl md:text-3xl font-bold text-base-content/90"
+            >
+              {{ taskPostedCount }}
+            </h4>
           </div>
         </div>
       </div>
       <!-- Metric Item End -->
 
       <!-- Pending -->
-      <div class="rounded-2xl border-2 border-base-300 bg-base-100 p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 flex flex-col items-start">
+      <div
+        class="rounded-2xl border-2 border-base-300 bg-base-100 p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 flex flex-col items-start"
+      >
         <div class="flex flex-col items-start">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-base-100">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-9 text-warning">
-              <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clip-rule="evenodd" />
+          <div
+            class="flex h-12 w-12 items-center justify-center rounded-xl bg-base-100"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              class="size-9 text-warning"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z"
+                clip-rule="evenodd"
+              />
             </svg>
           </div>
           <div class="mt-3 flex flex-col items-start w-full">
             <span class="text-md text-base-content">Tasks Pending</span>
-            <h4 class="mt-2 text-2xl md:text-3xl font-bold text-base-content/90">{{taskPendingCount}} </h4>
+            <h4
+              class="mt-2 text-2xl md:text-3xl font-bold text-base-content/90"
+            >
+              {{taskPendingCount}}
+            </h4>
           </div>
         </div>
       </div>
 
       <!-- Missed -->
-      <div class="rounded-2xl border-2 border-base-300 bg-base-100 p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 flex flex-col items-start">
+      <div
+        class="rounded-2xl border-2 border-base-300 bg-base-100 p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 flex flex-col items-start"
+      >
         <div class="flex flex-col items-start">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-base-100">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-9 text-error">
-              <path d="M3.375 3C2.339 3 1.5 3.84 1.5 4.875v.75c0 1.036.84 1.875 1.875 1.875h17.25c1.035 0 1.875-.84 1.875-1.875v-.75C22.5 3.839 21.66 3 20.625 3H3.375Z" />
-              <path fill-rule="evenodd" d="m3.087 9 .54 9.176A3 3 0 0 0 6.62 21h10.757a3 3 0 0 0 2.995-2.824L20.913 9H3.087Zm6.133 2.845a.75.75 0 0 1 1.06 0l1.72 1.72 1.72-1.72a.75.75 0 1 1 1.06 1.06l-1.72 1.72 1.72 1.72a.75.75 0 1 1-1.06 1.06L12 15.685l-1.72 1.72a.75.75 0 1 1-1.06-1.06l1.72-1.72-1.72-1.72a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+          <div
+            class="flex h-12 w-12 items-center justify-center rounded-xl bg-base-100"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              class="size-9 text-error"
+            >
+              <path
+                d="M3.375 3C2.339 3 1.5 3.84 1.5 4.875v.75c0 1.036.84 1.875 1.875 1.875h17.25c1.035 0 1.875-.84 1.875-1.875v-.75C22.5 3.839 21.66 3 20.625 3H3.375Z"
+              />
+              <path
+                fill-rule="evenodd"
+                d="m3.087 9 .54 9.176A3 3 0 0 0 6.62 21h10.757a3 3 0 0 0 2.995-2.824L20.913 9H3.087Zm6.133 2.845a.75.75 0 0 1 1.06 0l1.72 1.72 1.72-1.72a.75.75 0 1 1 1.06 1.06l-1.72 1.72 1.72 1.72a.75.75 0 1 1-1.06 1.06L12 15.685l-1.72 1.72a.75.75 0 1 1-1.06-1.06l1.72-1.72-1.72-1.72a.75.75 0 0 1 0-1.06Z"
+                clip-rule="evenodd"
+              />
             </svg>
           </div>
           <div class="mt-3 flex flex-col items-start w-full">
             <span class="text-md text-base-content">Tasks Missed</span>
-            <h4 class="mt-2 text-2xl md:text-3xl font-bold text-base-content/90">{{taskMissedCount}} </h4>
+            <h4
+              class="mt-2 text-2xl md:text-3xl font-bold text-base-content/90"
+            >
+              {{taskMissedCount}}
+            </h4>
           </div>
         </div>
       </div>
     </div>
     {% comment %} end metrics {% endcomment %}
-    <div class="my-8 border border-base-300 rounded-2xl p-2 sm:p-5 shadow-2xl flex-1 flex flex-col">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 h-full mb-5">
-        <!-- First row: Headings -->
-        <div class="flex items-center">
+    <div
+      class="my-8 border border-base-300 rounded-2xl p-2 sm:p-5 shadow-2xl flex-1 min-h-0 flex flex-col"
+    >
+      <div
+        class="flex flex-wrap items-center justify-between gap-3 border-b border-base-300 pb-4 mb-5"
+      >
+        <div>
+          <h2 class="text-lg font-bold">Import tasks</h2>
+          <p class="text-sm opacity-70">
+            Supports the FOUNDERS tracker format or columns: title, task_type,
+            deadline, description, status
+          </p>
         </div>
+        <form
+          id="task-import-form"
+          method="post"
+          action="{% url 'import_tasks' %}"
+          enctype="multipart/form-data"
+          class="flex flex-wrap items-center gap-2"
+        >
+          {% csrf_token %}
+          <input type="hidden" name="task_overrides" id="task-import-overrides" />
+          <input
+            type="file"
+            name="task_file"
+            accept=".xlsx"
+            required
+            class="file-input file-input-bordered file-input-sm w-full sm:w-auto"
+          />
+          <button type="submit" class="btn btn-primary btn-sm">
+            Import and sync
+          </button>
+        </form>
+        <form method="post" action="{% url 'resync_unsynced_tasks' %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline btn-sm">
+            Retry unsynced tasks
+          </button>
+        </form>
+      </div>
+      <dialog id="task-import-preview-modal" class="modal">
+        <div class="modal-box max-w-6xl">
+          <form method="dialog">
+            <button
+              class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+              aria-label="Close preview"
+            >
+              x
+            </button>
+          </form>
+          <h3 class="text-xl font-bold">Review tasks before import</h3>
+          <p
+            id="task-import-preview-summary"
+            class="mt-1 text-sm opacity-70"
+          ></p>
+          <div id="task-import-editor" class="hidden mt-4 rounded-lg border border-base-300 bg-base-200 p-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <label class="form-control"><span class="label-text">Task</span><input id="task-edit-title" class="input input-bordered" /></label>
+              <label class="form-control"><span class="label-text">Date</span><input id="task-edit-date" type="date" class="input input-bordered" /></label>
+              <label class="form-control"><span class="label-text">Assigned people</span><input id="task-edit-people" class="input input-bordered" placeholder="M. Funa (PJ), L. Funa (Writer)" /></label>
+              <label class="form-control"><span class="label-text">Status</span><select id="task-edit-status" class="select select-bordered"><option value="PENDING">Pending</option><option value="POSTED">Posted</option><option value="MISSED">Missed</option><option value="CANCELLED">Cancelled</option></select></label>
+            </div>
+            <div class="mt-3 flex justify-end"><button id="task-edit-save" type="button" class="btn btn-sm btn-primary">Save row changes</button></div>
+          </div>
+          <div
+            class="mt-4 max-h-[55vh] overflow-auto rounded-lg border border-base-300"
+          >
+            <table class="table table-zebra table-pin-rows">
+              <thead>
+                <tr>
+                  <th>Task</th>
+                  <th>Assigned people</th>
+                  <th>Staff check</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="task-import-preview-rows"></tbody>
+            </table>
+          </div>
+          <div class="modal-action">
+            <button id="task-import-cancel" type="button" class="btn">
+              Cancel
+            </button>
+            <button
+              id="task-import-confirm"
+              type="button"
+              class="btn btn-primary"
+            >
+              Confirm import and sync
+            </button>
+          </div>
+        </div>
+      </dialog>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-0 mb-5">
+        <!-- First row: Headings -->
+        <div class="flex items-center"></div>
         <div class="col-span-2 flex items-center">
           <!-- Optionally, you can put a calendar heading here, or leave empty for alignment -->
         </div>
         <!-- Second row: Content -->
-        <div class="flex flex-col gap-3 overflow-y-auto h-full min-w-0 overflow-hidden">
+        <div class="pending-tasks-panel flex flex-col gap-3 min-w-0">
           <div class="sticky top-0 z-10 bg-base-100 pb-2">
             {% if taskPendingCount %}
-              <h1 class="text-xl md:text-2xl font-bold">Pending Tasks</h1>
+            <h1 class="text-xl md:text-2xl font-bold">Pending Tasks</h1>
             {% else %}
-              <h1 class="text-xl md:text-2xl font-bold">No Pending Tasks</h1>
+            <h1 class="text-xl md:text-2xl font-bold">No Pending Tasks</h1>
             {% endif %}
           </div>
 
           {% for item in tasksPendingWithStaff %}
-          <div class="bg-primary p-3 min-h-[75px] md:p-5 rounded-2xl flex flex-col md:flex-row items-center gap-3 md:gap-5 overflow-hidden w-full">
+          <div
+            data-task-id="{{ item.task.id }}"
+            role="button"
+            tabindex="0"
+            aria-label="Open {{ item.task.title }}"
+            class="bg-primary p-3 min-h-[75px] md:p-5 rounded-2xl flex flex-col md:flex-row items-center gap-3 md:gap-5 overflow-hidden w-full"
+          >
             <div class="flex flex-col items-center flex-shrink-0 flex-grow-0">
-                <h1 class="text-lg md:text-2xl font-bold leading-none ">
+              <h1 class="text-lg md:text-2xl font-bold leading-none">
                 {{ item.task.deadline|date:"b"|upper }}
-                </h1>
+              </h1>
               <h1 class="text-2xl md:text-4xl font-extrabold leading-none mt-0">
                 {{ item.task.deadline|date:"d" }}
               </h1>
             </div>
-            <div class="flex flex-col items-baseline flex-1 min-w-0 overflow-hidden">
-              <div class="text-xl font-bold block w-full text-ellipsis overflow-hidden whitespace-nowrap tooltip tooltip-top" data-tip="{{item.task.title}}">
+            <div
+              class="flex flex-col items-baseline flex-1 min-w-0 overflow-hidden"
+            >
+              <div
+                class="text-xl font-bold block w-full text-ellipsis overflow-hidden whitespace-nowrap tooltip tooltip-top"
+                data-tip="{{item.task.title}}"
+              >
                 {{item.task.title}}
               </div>
-              <div class="block w-full text-ellipsis overflow-hidden whitespace-nowrap tooltip">
+              <div
+                class="block w-full text-ellipsis overflow-hidden whitespace-nowrap tooltip"
+              >
                 <div class="tooltip-content">
                   {% for abbr in item.staff_display %}{{ abbr }} {% endfor %}
                 </div>
@@ -123,10 +286,6 @@
             </div>
           </div>
           {% endfor %}
-
-
-
-
         </div>
         <div class="col-span-2 flex flex-col h-full">
           <div id="calendar" class="h-[400px] md:h-full w-full flex-1"></div>
@@ -134,550 +293,926 @@
       </div>
     </div>
   </div>
-  <div class="lg:hidden flex flex-col items-center justify-center h-full text-center p-4">
-    {% block 'error-view' %}
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-24 h-24 text-warning mb-4">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.992-1.45 1.746v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+  <div
+    class="lg:hidden flex flex-col items-center justify-center h-full text-center p-4"
+  >
+    {% block error-view %}
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class="w-24 h-24 text-warning mb-4"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.992-1.45 1.746v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"
+      />
     </svg>
     <h2 class="text-3xl font-bold mb-2">View Not Supported</h2>
-    <p class="text-lg text-gray-600">This calendar view is not optimized for smaller screens. Please use a device with a larger screen for the best experience.</p>
-    {% endblock 'error-view' %}
+    <p class="text-lg text-gray-600">
+      This calendar view is not optimized for smaller screens. Please use a
+      device with a larger screen for the best experience.
+    </p>
+    {% endblock error-view %}
   </div>
 </div>
 
-{% comment %} <script src="{% static 'js/calendar.js' %}"></script> {% endcomment %}
-
-
+{% comment %}
+<script src="{% static 'js/calendar.js' %}"></script>
+{% endcomment %}
 {% include "task/taskAddModal.html" %}
 {% include "task/taskEditModal.html" %}
 
-
-
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-  var calendarEl = document.getElementById('calendar');
+    document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
 
-  var calendar = new FullCalendar.Calendar(calendarEl, {
-    dateClick: function(info) {
-      document.getElementById('deadline').value = info.dateStr;
-      add_task_modal.showModal()
-    },
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+      dateClick: function(info) {
+        document.getElementById('deadline').value = info.dateStr;
+        add_task_modal.showModal()
+      },
 
-    eventClick: function(info) {
-      // Populate edit modal fields with event data
-      const event = info.event;
-      document.querySelector('#edit_task_modal [name="title"]').value = event.title || '';
-      document.querySelector('#edit_task_modal [name="deadline"]').value = event.start ? event.start.toISOString().slice(0, 10) : '';
-      // Adjust for timezone offset to get local date in YYYY-MM-DD
-      let localDate = '';
-      if (event.start) {
-        const tzOffset = event.start.getTimezoneOffset() * 60000;
-        const localISO = new Date(event.start.getTime() - tzOffset).toISOString().slice(0, 10);
-        localDate = localISO;
-      }
-      console.log(localDate);
-      document.querySelector('#edit_task_modal [name="deadline"]').value = localDate;
-      document.querySelector('#edit_task_modal [name="description"]').value = event.extendedProps.description || '';
-      document.querySelector('#edit_task_modal [name="task_type"]').value = event.extendedProps.task_type || '';
-      document.querySelector('#edit_task_modal [name="task_id"]').value = event.id || '';
-      // Set google_event_id in the edit form if present
-      let googleEventId = event.extendedProps.google_event_id || '';
-      document.querySelector('#edit_task_modal [name="google_event_id"]').value = googleEventId;
+      eventClick: function(info) {
+        // Populate edit modal fields with event data
+        const event = info.event;
+        document.querySelector('#edit_task_modal [name="title"]').value = event.title || '';
+        document.querySelector('#edit_task_modal [name="deadline"]').value = event.start ? event.start.toISOString().slice(0, 10) : '';
+        // Adjust for timezone offset to get local date in YYYY-MM-DD
+        let localDate = '';
+        if (event.start) {
+          const tzOffset = event.start.getTimezoneOffset() * 60000;
+          const localISO = new Date(event.start.getTime() - tzOffset).toISOString().slice(0, 10);
+          localDate = localISO;
+        }
+        console.log(localDate);
+        document.querySelector('#edit_task_modal [name="deadline"]').value = localDate;
+        document.querySelector('#edit_task_modal [name="description"]').value = event.extendedProps.description || '';
+        document.querySelector('#edit_task_modal [name="task_type"]').value = event.extendedProps.task_type || '';
+        document.querySelector('#edit_task_modal [name="task_id"]').value = event.id || '';
+        // Set google_event_id in the edit form if present
+        let googleEventId = event.extendedProps.google_event_id || '';
+        document.querySelector('#edit_task_modal [name="google_event_id"]').value = googleEventId;
 
-      // Ensure the status dropdown is updated visually (for DaisyUI or custom select)
-      const statusSelect = document.querySelector('#edit_task_modal [name="status"]');
-      if (statusSelect) {
-        statusSelect.value = event.extendedProps.status || '';
-        // Trigger change event in case a custom UI is used
-        statusSelect.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-      // Populate staff/role assignments
-      const assignments = event.extendedProps.assignments || [];
-      const modalBox = document.getElementById('edit_task_modal').querySelector('.modal-box');
-      const container = modalBox.querySelector('.staff-role-container');
-      // Remove all rows except the first
-      let rows = container.querySelectorAll('.staff-role-row');
-      rows.forEach((row, idx) => { if (idx > 0) row.remove(); });
-      let firstRow = container.querySelector('.staff-role-row');
-      // If there are assignments, fill them in
-      if (assignments.length > 0) {
-        assignments.forEach((assignment, idx) => {
-          let row;
-          if (idx === 0) {
-            row = firstRow;
-          } else {
-            row = firstRow.cloneNode(true);
-            container.appendChild(row);
-          }
-          // Set role
-          const roleSelect = row.querySelector('.role-select');
-          roleSelect.value = assignment.role_id;
-          // Populate staff dropdown for this role
-          const staffSelect = row.querySelector('.staff-select');
-          staffSelect.innerHTML = '<option value="">Select Staff</option>';
-          if (assignment.role_id && staffData[assignment.role_id]) {
-            staffData[assignment.role_id].forEach(staff => {
-              const opt = document.createElement('option');
-              opt.value = staff.id;
-              opt.textContent = staff.name;
-              staffSelect.appendChild(opt);
-            });
-          }
-          staffSelect.value = assignment.staff_id;
-        });
-      } else {
-        // If no assignments, reset first row
-        firstRow.querySelector('.role-select').selectedIndex = 0;
-        firstRow.querySelector('.staff-select').innerHTML = '<option value="">Select Staff</option>';
-      }
-      updateRemoveButtons(container);
-      edit_task_modal.showModal();
-    },  
+        // Ensure the status dropdown is updated visually (for DaisyUI or custom select)
+        const statusSelect = document.querySelector('#edit_task_modal [name="status"]');
+        if (statusSelect) {
+          statusSelect.value = event.extendedProps.status || '';
+          // Trigger change event in case a custom UI is used
+          statusSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        // Populate staff/role assignments
+        const assignments = event.extendedProps.assignments || [];
+        const modalBox = document.getElementById('edit_task_modal').querySelector('.modal-box');
+        const container = modalBox.querySelector('.staff-role-container');
+        // Remove all rows except the first
+        let rows = container.querySelectorAll('.staff-role-row');
+        rows.forEach((row, idx) => { if (idx > 0) row.remove(); });
+        let firstRow = container.querySelector('.staff-role-row');
+        // If there are assignments, fill them in
+        if (assignments.length > 0) {
+          assignments.forEach((assignment, idx) => {
+            let row;
+            if (idx === 0) {
+              row = firstRow;
+            } else {
+              row = firstRow.cloneNode(true);
+              container.appendChild(row);
+            }
+            // Set role
+            const roleSelect = row.querySelector('.role-select');
+            roleSelect.value = assignment.role_id;
+            // Populate staff dropdown for this role
+            const staffSelect = row.querySelector('.staff-select');
+            staffSelect.innerHTML = '<option value="">Select Staff</option>';
+            if (assignment.role_id && staffData[assignment.role_id]) {
+              staffData[assignment.role_id].forEach(staff => {
+                const opt = document.createElement('option');
+                opt.value = staff.id;
+                opt.textContent = staff.name;
+                staffSelect.appendChild(opt);
+              });
+            }
+            staffSelect.value = assignment.staff_id;
+          });
+        } else {
+          // If no assignments, reset first row
+          firstRow.querySelector('.role-select').selectedIndex = 0;
+          firstRow.querySelector('.staff-select').innerHTML = '<option value="">Select Staff</option>';
+        }
+        updateRemoveButtons(container);
+        edit_task_modal.showModal();
+      },
 
-    initialView: 'dayGridMonth',
-    initialDate: new Date(),
-    headerToolbar: {
-      left: 'prev,next today',
-      center: 'title',
-      right: 'dayGridMonth,timeGridWeek,timeGridDay'
-    },
-    
-    eventClassNames: function(arg) {
-      // Use DaisyUI classes for event color and status
-      let classes = ['rounded-lg', 'border-none', 'shadow', 'hover:opacity-90'];
-      if (arg.event.extendedProps && arg.event.extendedProps.status) {
-        const status = arg.event.extendedProps.status;
-        const className = 'event-' + status.replace(/_/g, '_');
-        classes.push(className);
-      }
-      return classes;
-    },
-    eventDidMount: function(info) {
-      // Remove all previous event-* classes
-      info.el.className = info.el.className.split(' ').filter(cls => !cls.startsWith('event-')).join(' ');
-      if (info.event.extendedProps && info.event.extendedProps.status) {
-        const status = info.event.extendedProps.status;
-        const className = 'event-' + status.replace(/_/g, '_');
-        info.el.classList.add(className);
-      }
-    },
-    dayMaxEvents: true, // allow "more" link when too many events
-    events: {{ events_json|safe }},
+      initialView: 'dayGridMonth',
+      initialDate: new Date(),
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,timeGridDay'
+      },
+
+      eventClassNames: function(arg) {
+        // Use DaisyUI classes for event color and status
+        let classes = ['rounded-lg', 'border-none', 'shadow', 'hover:opacity-90'];
+        if (arg.event.extendedProps && arg.event.extendedProps.status) {
+          const status = arg.event.extendedProps.status;
+          const className = 'event-' + status.replace(/_/g, '_');
+          classes.push(className);
+        }
+        return classes;
+      },
+      eventDidMount: function(info) {
+        // Remove all previous event-* classes
+        info.el.className = info.el.className.split(' ').filter(cls => !cls.startsWith('event-')).join(' ');
+        if (info.event.extendedProps && info.event.extendedProps.status) {
+          const status = info.event.extendedProps.status;
+          const className = 'event-' + status.replace(/_/g, '_');
+          info.el.classList.add(className);
+        }
+      },
+      dayMaxEvents: true, // allow "more" link when too many events
+      events: {{ events_json|safe }},
+    });
+
+    calendar.render();
+
+    document.querySelectorAll('[data-task-id]').forEach(function (taskCard) {
+      const openTask = function () {
+        const taskEvent = calendar.getEventById(taskCard.dataset.taskId);
+        const eventClick = calendar.getOption('eventClick');
+        if (taskEvent && typeof eventClick === 'function') {
+          eventClick({ event: taskEvent, jsEvent: null, view: calendar.view });
+        }
+      };
+      taskCard.addEventListener('click', openTask);
+      taskCard.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          openTask();
+        }
+      });
+    });
   });
-
-  calendar.render();
-});
 </script>
 
-
 <script>
-const staffData = {{ staff_by_role_json|safe }}; // Pass this from your Django view as a JSON dict: {role_id: [{id, name}, ...]}
-function updateStaffOptions(roleSelect) {
-  const staffSelect = roleSelect.closest('.staff-role-row').querySelector('.staff-select');
-  const roleId = roleSelect.value;
-  staffSelect.innerHTML = '<option value="">Select Staff</option>';
-  if (roleId && staffData[roleId]) {
-    staffData[roleId].forEach(staff => {
-      const opt = document.createElement('option');
-      opt.value = staff.id;
-      opt.textContent = staff.name;
-      staffSelect.appendChild(opt);
-    });
-  }
-}
-
-document.addEventListener('change', function(e) {
-  if (e.target.classList.contains('role-select')) {
-    updateStaffOptions(e.target);
-  }
-});
-
-// Delegated add row handler for both modals
-// (works for .add-staff-role-btn in both add and edit modals)
-document.body.addEventListener('click', function(e) {
-  if (e.target.closest('.add-staff-role-btn')) {
-    const modalBox = e.target.closest('.modal-box');
-    const container = modalBox.querySelector('.staff-role-container');
-    const firstRow = container.querySelector('.staff-role-row');
-    const newRow = firstRow.cloneNode(true);
-    // Reset selects
-    newRow.querySelector('.role-select').selectedIndex = 0;
-    newRow.querySelector('.staff-select').innerHTML = '<option value="">Select Staff</option>';
-    container.appendChild(newRow);
-    updateRemoveButtons(container);
-  }
-});
-
-// Delegated remove row handler for both modals
-document.body.addEventListener('click', function(e) {
-  if (e.target.closest('.remove-row-btn')) {
-    const btn = e.target.closest('.remove-row-btn');
-    const modalBox = btn.closest('.modal-box');
-    const container = modalBox.querySelector('.staff-role-container');
-    const row = btn.closest('.staff-role-row');
-    if (container.querySelectorAll('.staff-role-row').length > 1) {
-      row.remove();
-      updateRemoveButtons(container);
+  const staffData = {{ staff_by_role_json|safe }}; // Pass this from your Django view as a JSON dict: {role_id: [{id, name}, ...]}
+  function updateStaffOptions(roleSelect) {
+    const staffSelect = roleSelect.closest('.staff-role-row').querySelector('.staff-select');
+    const roleId = roleSelect.value;
+    staffSelect.innerHTML = '<option value="">Select Staff</option>';
+    if (roleId && staffData[roleId]) {
+      staffData[roleId].forEach(staff => {
+        const opt = document.createElement('option');
+        opt.value = staff.id;
+        opt.textContent = staff.name;
+        staffSelect.appendChild(opt);
+      });
     }
   }
-});
 
-// Update remove button visibility for a given container
-function updateRemoveButtons(container) {
-  const rows = container.querySelectorAll('.staff-role-row');
-  rows.forEach(row => row.querySelector('.remove-row-btn').classList.add('invisible'));
-  if (rows.length > 1) {
-    rows.forEach(row => row.querySelector('.remove-row-btn').classList.remove('invisible'));
-  }
-}
-
-// On page load and after modal open, ensure remove button visibility is correct
-function initStaffRoleModals() {
-  document.querySelectorAll('.modal-box .staff-role-container').forEach(container => {
-    updateRemoveButtons(container);
+  document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('role-select')) {
+      updateStaffOptions(e.target);
+    }
   });
-}
-document.addEventListener('DOMContentLoaded', initStaffRoleModals);
-document.body.addEventListener('htmx:afterSettle', initStaffRoleModals);
+
+  // Delegated add row handler for both modals
+  // (works for .add-staff-role-btn in both add and edit modals)
+  document.body.addEventListener('click', function(e) {
+    if (e.target.closest('.add-staff-role-btn')) {
+      const modalBox = e.target.closest('.modal-box');
+      const container = modalBox.querySelector('.staff-role-container');
+      const firstRow = container.querySelector('.staff-role-row');
+      const newRow = firstRow.cloneNode(true);
+      // Reset selects
+      newRow.querySelector('.role-select').selectedIndex = 0;
+      newRow.querySelector('.staff-select').innerHTML = '<option value="">Select Staff</option>';
+      container.appendChild(newRow);
+      updateRemoveButtons(container);
+    }
+  });
+
+  // Delegated remove row handler for both modals
+  document.body.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-row-btn')) {
+      const btn = e.target.closest('.remove-row-btn');
+      const modalBox = btn.closest('.modal-box');
+      const container = modalBox.querySelector('.staff-role-container');
+      const row = btn.closest('.staff-role-row');
+      if (container.querySelectorAll('.staff-role-row').length > 1) {
+        row.remove();
+        updateRemoveButtons(container);
+      }
+    }
+  });
+
+  // Update remove button visibility for a given container
+  function updateRemoveButtons(container) {
+    const rows = container.querySelectorAll('.staff-role-row');
+    rows.forEach(row => row.querySelector('.remove-row-btn').classList.add('invisible'));
+    if (rows.length > 1) {
+      rows.forEach(row => row.querySelector('.remove-row-btn').classList.remove('invisible'));
+    }
+  }
+
+  // On page load and after modal open, ensure remove button visibility is correct
+  function initStaffRoleModals() {
+    document.querySelectorAll('.modal-box .staff-role-container').forEach(container => {
+      updateRemoveButtons(container);
+    });
+  }
+  document.addEventListener('DOMContentLoaded', initStaffRoleModals);
+  document.body.addEventListener('htmx:afterSettle', initStaffRoleModals);
 </script>
 {% comment %} tasks for calendar {% endcomment %}
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const makeWebhookUrl = "{% url 'sync_google_calendar' %}";
-  const csrfToken = getCookie('csrftoken');
-  const addTaskForm = document.querySelector('#add_task_modal form');
-  const editTaskForm = document.querySelector('#edit_task_modal form');
+  document.addEventListener('DOMContentLoaded', function () {
+    const makeWebhookUrl = "{% url 'sync_google_calendar' %}";
+    const csrfToken = getCookie('csrftoken');
+    const addTaskForm = document.querySelector('#add_task_modal form');
+    const editTaskForm = document.querySelector('#edit_task_modal form');
 
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + '=') {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
         }
       }
+      return cookieValue;
     }
-    return cookieValue;
-  }
-  
-  if (addTaskForm) {
-    let isSubmittingToMake = false;
-    addTaskForm.addEventListener('submit', async function(e) {
-      if (isSubmittingToMake) return;
-      e.preventDefault();
-      isSubmittingToMake = true;
 
-      try {
-        // Build the staff-role summary and collect assignments
-        let staffRoleSummary = '';
-        const attendees = [];
-        const formData = new FormData(addTaskForm);
-        const taskTypeSelect = addTaskForm.querySelector('[name="task_type"]');
-        const taskTypeForMake = taskTypeSelect ? taskTypeSelect.options[taskTypeSelect.selectedIndex]?.text?.trim() : '';
-        const userDesc = formData.get('description') || '';
+    if (addTaskForm) {
+      let isSubmittingToMake = false;
+      addTaskForm.addEventListener('submit', async function (e) {
+        if (isSubmittingToMake) return;
+        e.preventDefault();
+        isSubmittingToMake = true;
 
-        console.log('Initial staffData:', staffData);
-        console.log('Detailed staffData structure:', JSON.stringify(staffData, null, 2));
-        
-        addTaskForm.querySelectorAll('.staff-role-row').forEach((row, index) => {
-          const roleSelect = row.querySelector('.role-select');
-          const staffSelect = row.querySelector('.staff-select');
-          const roleId = roleSelect.value;
-          const staffId = staffSelect.value;
-          const roleName = roleSelect.options[roleSelect.selectedIndex]?.text?.trim();
-          const staffName = staffSelect.options[staffSelect.selectedIndex]?.text?.trim();
-          
-          console.log(`Row ${index + 1} data:`, {
-            roleId,
-            staffId,
-            roleName,
-            staffName,
-            roleSelectOptions: Array.from(roleSelect.options).map(opt => ({ value: opt.value, text: opt.text })),
-            staffSelectOptions: Array.from(staffSelect.options).map(opt => ({ value: opt.value, text: opt.text }))
-          });
-          
-          if (roleId && staffId) {
-            console.log(`Looking up staff member for role ${roleId} and staff ${staffId}`);
-            console.log('Available staff for this role:', staffData[roleId]);
-            
-            const staffMembers = staffData[roleId];
-            console.log('Staff members for role:', staffMembers);
-            
-            staffMembers?.forEach(staff => {
-              console.log('Staff member structure:', staff);
+        try {
+          // Build the staff-role summary and collect assignments
+          let staffRoleSummary = '';
+          const attendees = [];
+          const formData = new FormData(addTaskForm);
+          const taskTypeSelect =
+            addTaskForm.querySelector('[name="task_type"]');
+          const taskTypeForMake = taskTypeSelect
+            ? taskTypeSelect.options[taskTypeSelect.selectedIndex]?.text?.trim()
+            : '';
+          const userDesc = formData.get('description') || '';
+
+          console.log('Initial staffData:', staffData);
+          console.log(
+            'Detailed staffData structure:',
+            JSON.stringify(staffData, null, 2),
+          );
+
+          addTaskForm
+            .querySelectorAll('.staff-role-row')
+            .forEach((row, index) => {
+              const roleSelect = row.querySelector('.role-select');
+              const staffSelect = row.querySelector('.staff-select');
+              const roleId = roleSelect.value;
+              const staffId = staffSelect.value;
+              const roleName =
+                roleSelect.options[roleSelect.selectedIndex]?.text?.trim();
+              const staffName =
+                staffSelect.options[staffSelect.selectedIndex]?.text?.trim();
+
+              console.log(`Row ${index + 1} data:`, {
+                roleId,
+                staffId,
+                roleName,
+                staffName,
+                roleSelectOptions: Array.from(roleSelect.options).map(
+                  (opt) => ({ value: opt.value, text: opt.text }),
+                ),
+                staffSelectOptions: Array.from(staffSelect.options).map(
+                  (opt) => ({ value: opt.value, text: opt.text }),
+                ),
+              });
+
+              if (roleId && staffId) {
+                console.log(
+                  `Looking up staff member for role ${roleId} and staff ${staffId}`,
+                );
+                console.log(
+                  'Available staff for this role:',
+                  staffData[roleId],
+                );
+
+                const staffMembers = staffData[roleId];
+                console.log('Staff members for role:', staffMembers);
+
+                staffMembers?.forEach((staff) => {
+                  console.log('Staff member structure:', staff);
+                });
+
+                const staffMember = staffMembers?.find((staff) => {
+                  console.log('Comparing:', { staffId, staffValue: staff.id });
+                  return staff.id === parseInt(staffId);
+                });
+
+                console.log('Found staff member:', staffMember);
+
+                if (staffMember?.email) {
+                  console.log('Adding attendee with email:', staffMember.email);
+                  attendees.push({ email: staffMember.email });
+                  console.log(
+                    'Current attendees array:',
+                    JSON.stringify(attendees),
+                  );
+                } else {
+                  console.log('No email found for staff member');
+                }
+
+                if (roleName && staffName && staffName !== 'Select Staff') {
+                  staffRoleSummary += `${roleName} - ${staffName}\n`;
+                }
+              }
             });
-            
-            const staffMember = staffMembers?.find(staff => {
-              console.log('Comparing:', { staffId, staffValue: staff.id });
-              return staff.id === parseInt(staffId);
-            });
-            
-            console.log('Found staff member:', staffMember);
-            
-            if (staffMember?.email) {
-              console.log('Adding attendee with email:', staffMember.email);
-              attendees.push({ email: staffMember.email });
-              console.log('Current attendees array:', JSON.stringify(attendees));
-            } else {
-              console.log('No email found for staff member');
-            }
-            
-            if (roleName && staffName && staffName !== 'Select Staff') {
-              staffRoleSummary += `${roleName} - ${staffName}\n`;
-            }
-          }
-        });
 
-        console.log('Final attendees array before data object:', JSON.stringify(attendees));
+          console.log(
+            'Final attendees array before data object:',
+            JSON.stringify(attendees),
+          );
 
-        let finalDescriptionForMake = '';
-        if (taskTypeForMake) {
+          let finalDescriptionForMake = '';
+          if (taskTypeForMake) {
             finalDescriptionForMake += taskTypeForMake.toUpperCase();
             finalDescriptionForMake += ' PENDING';
-        }
+          }
 
-        if (userDesc) {
+          if (userDesc) {
             if (finalDescriptionForMake) finalDescriptionForMake += '\n';
             finalDescriptionForMake += userDesc;
-        }
+          }
 
-        if (staffRoleSummary) {
+          if (staffRoleSummary) {
             if (finalDescriptionForMake) finalDescriptionForMake += '\n\n';
             finalDescriptionForMake += staffRoleSummary;
-        }
-
-        const data = {
-          action: 'add',
-          task_id: null,
-          title: formData.get('title'),
-          description: finalDescriptionForMake,
-          deadline: formData.get('deadline'),
-          task_type: formData.get('task_type'),
-          status: 'PENDING',
-          google_event_id: formData.get('google_event_id'),
-          staff_role_summary: staffRoleSummary,
-          attendees: [...attendees]  // Create a new array to ensure we're not losing the data
-        };
-
-        console.log('Final data being sent to Make.com:', JSON.stringify(data, null, 2));
-
-        try {
-          const saveResponse = await fetch(window.location.pathname, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-              'X-Requested-With': 'XMLHttpRequest',
-              'X-CSRFToken': csrfToken
-            },
-            body: formData
-          });
-          if (!saveResponse.ok) {
-            throw new Error('Failed to save task');
           }
 
-          const savedTask = await saveResponse.json();
-          data.task_id = savedTask.task_id;
-          fetch(makeWebhookUrl, {
-            method: 'POST',
-            credentials: 'same-origin',
-            keepalive: true,
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify(data)
-          }).catch(error => console.error('Google Calendar sync failed:', error));
-          window.location.href = '/calendar/';
+          const data = {
+            action: 'add',
+            task_id: null,
+            title: formData.get('title'),
+            description: finalDescriptionForMake,
+            deadline: formData.get('deadline'),
+            task_type: formData.get('task_type'),
+            status: 'PENDING',
+            google_event_id: formData.get('google_event_id'),
+            staff_role_summary: staffRoleSummary,
+            attendees: [...attendees], // Create a new array to ensure we're not losing the data
+          };
+
+          console.log(
+            'Final data being sent to Make.com:',
+            JSON.stringify(data, null, 2),
+          );
+
+          try {
+            const saveResponse = await fetch(window.location.pathname, {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken,
+              },
+              body: formData,
+            });
+            if (!saveResponse.ok) {
+              throw new Error('Failed to save task');
+            }
+
+            const savedTask = await saveResponse.json();
+            data.task_id = savedTask.task_id;
+            fetch(makeWebhookUrl, {
+              method: 'POST',
+              credentials: 'same-origin',
+              keepalive: true,
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+              },
+              body: JSON.stringify(data),
+            }).catch((error) =>
+              console.error('Google Calendar sync failed:', error),
+            );
+            window.location.href = '/calendar/';
+          } catch (err) {
+            isSubmittingToMake = false;
+            alert('Failed to sync with Google Calendar. Please try again.');
+          }
         } catch (err) {
           isSubmittingToMake = false;
-          alert('Failed to sync with Google Calendar. Please try again.');
-        }
-      } catch (err) {
-        isSubmittingToMake = false;
-        alert('An error occurred. Please try again.');
-      }
-    });
-  }
-
-  if (editTaskForm) {
-    let isSubmittingToMake = false;
-    
-    const deleteBtn = editTaskForm.querySelector('button[name="delete_task"]');
-    if (deleteBtn) {
-      deleteBtn.addEventListener('click', async function(e) {
-        e.preventDefault();
-        const formData = new FormData(editTaskForm);
-        const googleEventId = formData.get('google_event_id');
-        
-        if (!googleEventId) {
-          editTaskForm.setAttribute('data-delete', '1');
-          let actionInput = editTaskForm.querySelector('[name="action"]');
-          if (!actionInput) {
-            actionInput = document.createElement('input');
-            actionInput.type = 'hidden';
-            actionInput.name = 'action';
-            editTaskForm.appendChild(actionInput);
-          }
-          actionInput.value = 'delete';
-          editTaskForm.dispatchEvent(new Event('submit'));
-          return;
-        }
-
-        const deleteData = {
-          action: 'delete',
-          task_id: formData.get('task_id'),
-          google_event_id: googleEventId
-        };
-        
-        try {
-          const response = await fetch(makeWebhookUrl, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify(deleteData)
-          });
-          const responseText = await response.text();
-          
-          if (!response.ok) {
-            console.error('Google Calendar delete failed:', response.status, responseText);
-            throw new Error('Failed to delete from Google Calendar');
-          }
-
-          editTaskForm.setAttribute('data-delete', '1');
-          let actionInput = editTaskForm.querySelector('[name="action"]');
-          if (!actionInput) {
-            actionInput = document.createElement('input');
-            actionInput.type = 'hidden';
-            actionInput.name = 'action';
-            editTaskForm.appendChild(actionInput);
-          }
-          actionInput.value = 'delete';
-          document.getElementById('edit_task_modal').close();
-          editTaskForm.submit();
-        } catch (err) {
-          alert('Failed to delete from Google Calendar. Please try again.');
+          alert('An error occurred. Please try again.');
         }
       });
     }
 
-    editTaskForm.addEventListener('submit', async function(e) {
-      if (isSubmittingToMake) return;
-      e.preventDefault();
-      isSubmittingToMake = true;
+    if (editTaskForm) {
+      let isSubmittingToMake = false;
 
-      try {
-        const formData = new FormData(editTaskForm);
-        const isDelete = editTaskForm.getAttribute('data-delete') === '1';
-        const googleEventId = formData.get('google_event_id');
-        const taskTypeSelect = editTaskForm.querySelector('[name="task_type"]');
-        const taskTypeForMake = taskTypeSelect ? taskTypeSelect.options[taskTypeSelect.selectedIndex]?.text?.trim() : '';
-        const userDesc = formData.get('description') || '';
+      const deleteBtn = editTaskForm.querySelector(
+        'button[name="delete_task"]',
+      );
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', async function (e) {
+          e.preventDefault();
+          const formData = new FormData(editTaskForm);
+          const googleEventId = formData.get('google_event_id');
 
-        if (isDelete) {
-          return;
-        }
-
-        // Build the staff-role summary and collect assignments
-        let staffRoleSummary = '';
-        const attendees = [];
-        editTaskForm.querySelectorAll('.staff-role-row').forEach(row => {
-          const roleSelect = row.querySelector('.role-select');
-          const staffSelect = row.querySelector('.staff-select');
-          const roleId = roleSelect.value;
-          const staffId = staffSelect.value;
-          const roleName = roleSelect.options[roleSelect.selectedIndex]?.text?.trim();
-          const staffName = staffSelect.options[staffSelect.selectedIndex]?.text?.trim();
-          
-          if (roleId && staffId) {
-            const staffMembers = staffData[roleId];
-            const staffMember = staffMembers?.find(staff => staff.id === parseInt(staffId));
-            
-            if (staffMember?.email) {
-              attendees.push({ email: staffMember.email });
+          if (!googleEventId) {
+            editTaskForm.setAttribute('data-delete', '1');
+            let actionInput = editTaskForm.querySelector('[name="action"]');
+            if (!actionInput) {
+              actionInput = document.createElement('input');
+              actionInput.type = 'hidden';
+              actionInput.name = 'action';
+              editTaskForm.appendChild(actionInput);
             }
-            
-            if (roleName && staffName && staffName !== 'Select Staff') {
-              staffRoleSummary += `${roleName} - ${staffName}\n`;
+            actionInput.value = 'delete';
+            editTaskForm.dispatchEvent(new Event('submit'));
+            return;
+          }
+
+          const deleteData = {
+            action: 'delete',
+            task_id: formData.get('task_id'),
+            google_event_id: googleEventId,
+          };
+
+          try {
+            const response = await fetch(makeWebhookUrl, {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+              },
+              body: JSON.stringify(deleteData),
+            });
+            const responseText = await response.text();
+
+            if (!response.ok) {
+              console.error(
+                'Google Calendar delete failed:',
+                response.status,
+                responseText,
+              );
+              throw new Error('Failed to delete from Google Calendar');
             }
+
+            editTaskForm.setAttribute('data-delete', '1');
+            let actionInput = editTaskForm.querySelector('[name="action"]');
+            if (!actionInput) {
+              actionInput = document.createElement('input');
+              actionInput.type = 'hidden';
+              actionInput.name = 'action';
+              editTaskForm.appendChild(actionInput);
+            }
+            actionInput.value = 'delete';
+            document.getElementById('edit_task_modal').close();
+            editTaskForm.submit();
+          } catch (err) {
+            alert('Failed to delete from Google Calendar. Please try again.');
           }
         });
+      }
 
-        let finalDescriptionForMake = '';
-        if (taskTypeForMake) {
+      editTaskForm.addEventListener('submit', async function (e) {
+        if (window.previewImportTask) {
+          e.preventDefault();
+          const previewTask = window.previewImportTask;
+          const previewFormData = new FormData(editTaskForm);
+          previewTask.title = previewFormData.get('title') || previewTask.title;
+          previewTask.date = previewFormData.get('deadline') || previewTask.date;
+          previewTask.status = previewFormData.get('status') || previewTask.status;
+          previewTask.description = previewFormData.get('description') || previewTask.description || '';
+          previewTask.people = Array.from(editTaskForm.querySelectorAll('.staff-role-row')).map((row) => {
+            const role = row.querySelector('.role-select')?.selectedOptions[0]?.text?.trim();
+            const staff = row.querySelector('.staff-select')?.selectedOptions[0]?.text?.trim();
+            return role && staff && role !== 'Select Role' && staff !== 'Select Staff' ? `${staff} (${role})` : '';
+          }).filter(Boolean).join(', ') || 'None';
+          window.dispatchEvent(new CustomEvent('preview-task-updated'));
+          document.getElementById('edit_task_modal').close();
+          window.previewImportTask = null;
+          return;
+        }
+        if (isSubmittingToMake) return;
+        e.preventDefault();
+        isSubmittingToMake = true;
+
+        try {
+          const formData = new FormData(editTaskForm);
+          const isDelete = editTaskForm.getAttribute('data-delete') === '1';
+          const googleEventId = formData.get('google_event_id');
+          const taskTypeSelect =
+            editTaskForm.querySelector('[name="task_type"]');
+          const taskTypeForMake = taskTypeSelect
+            ? taskTypeSelect.options[taskTypeSelect.selectedIndex]?.text?.trim()
+            : '';
+          const userDesc = formData.get('description') || '';
+
+          if (isDelete) {
+            return;
+          }
+
+          // Build the staff-role summary and collect assignments
+          let staffRoleSummary = '';
+          const attendees = [];
+          editTaskForm.querySelectorAll('.staff-role-row').forEach((row) => {
+            const roleSelect = row.querySelector('.role-select');
+            const staffSelect = row.querySelector('.staff-select');
+            const roleId = roleSelect.value;
+            const staffId = staffSelect.value;
+            const roleName =
+              roleSelect.options[roleSelect.selectedIndex]?.text?.trim();
+            const staffName =
+              staffSelect.options[staffSelect.selectedIndex]?.text?.trim();
+
+            if (roleId && staffId) {
+              const staffMembers = staffData[roleId];
+              const staffMember = staffMembers?.find(
+                (staff) => staff.id === parseInt(staffId),
+              );
+
+              if (staffMember?.email) {
+                attendees.push({ email: staffMember.email });
+              }
+
+              if (roleName && staffName && staffName !== 'Select Staff') {
+                staffRoleSummary += `${roleName} - ${staffName}\n`;
+              }
+            }
+          });
+
+          let finalDescriptionForMake = '';
+          if (taskTypeForMake) {
             finalDescriptionForMake += taskTypeForMake.toUpperCase();
             const statusForMake = formData.get('status') || 'PENDING';
             finalDescriptionForMake += ' ' + statusForMake.toUpperCase();
-        }
+          }
 
-        if (userDesc) {
+          if (userDesc) {
             if (finalDescriptionForMake) finalDescriptionForMake += '\n';
             finalDescriptionForMake += userDesc;
-        }
+          }
 
-        if (staffRoleSummary) {
+          if (staffRoleSummary) {
             if (finalDescriptionForMake) finalDescriptionForMake += '\n\n';
             finalDescriptionForMake += staffRoleSummary;
-        }
-
-        const data = {
-          action: 'edit',
-          task_id: formData.get('task_id'),
-          title: formData.get('title'),
-          description: finalDescriptionForMake,
-          deadline: formData.get('deadline'),
-          task_type: formData.get('task_type'),
-          status: formData.get('status'),
-          google_event_id: googleEventId || null,
-          attendees: [...attendees],
-          create_if_not_exists: !googleEventId
-        };
-
-        try {
-          const response = await fetch(makeWebhookUrl, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify(data)
-          });
-          const responseText = await response.text();
-          
-          if (!response.ok) {
-            console.error('Google Calendar sync failed:', response.status, responseText);
-            throw new Error('Failed to sync with Google Calendar');
           }
+
+          const data = {
+            action: 'edit',
+            task_id: formData.get('task_id'),
+            title: formData.get('title'),
+            description: finalDescriptionForMake,
+            deadline: formData.get('deadline'),
+            task_type: formData.get('task_type'),
+            status: formData.get('status'),
+            google_event_id: googleEventId || null,
+            attendees: [...attendees],
+            create_if_not_exists: !googleEventId,
+          };
 
           try {
-            const responseData = JSON.parse(responseText);
-            if (responseData.google_event_id) {
-              document.querySelector('#edit_task_modal [name="google_event_id"]').value = responseData.google_event_id;
-            }
-          } catch (parseError) {
-            // Ignore parse errors
-          }
+            const response = await fetch(makeWebhookUrl, {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+              },
+              body: JSON.stringify(data),
+            });
+            const responseText = await response.text();
 
-          editTaskForm.submit();
+            if (!response.ok) {
+              console.error(
+                'Google Calendar sync failed:',
+                response.status,
+                responseText,
+              );
+              throw new Error('Failed to sync with Google Calendar');
+            }
+
+            try {
+              const responseData = JSON.parse(responseText);
+              if (responseData.google_event_id) {
+                document.querySelector(
+                  '#edit_task_modal [name="google_event_id"]',
+                ).value = responseData.google_event_id;
+              }
+            } catch (parseError) {
+              // Ignore parse errors
+            }
+
+            editTaskForm.submit();
+          } catch (err) {
+            isSubmittingToMake = false;
+            alert('Failed to sync with Google Calendar. Please try again.');
+          }
         } catch (err) {
           isSubmittingToMake = false;
-          alert('Failed to sync with Google Calendar. Please try again.');
+          alert('An error occurred. Please try again.');
         }
-      } catch (err) {
-        isSubmittingToMake = false;
-        alert('An error occurred. Please try again.');
-      }
-    });
-  }
-});
+      });
+    }
+  });
 </script>
 
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const importForm = document.getElementById('task-import-form');
+    const fileInput = importForm?.querySelector('[name="task_file"]');
+    const previewModal = document.getElementById('task-import-preview-modal');
+    const previewRows = document.getElementById('task-import-preview-rows');
+    const previewSummary = document.getElementById(
+      'task-import-preview-summary',
+    );
+    const confirmButton = document.getElementById('task-import-confirm');
+    const cancelButton = document.getElementById('task-import-cancel');
+    const editor = document.getElementById('task-import-editor');
+    const editTitle = document.getElementById('task-edit-title');
+    const editDate = document.getElementById('task-edit-date');
+    const editPeople = document.getElementById('task-edit-people');
+    const editStatus = document.getElementById('task-edit-status');
+    const editSave = document.getElementById('task-edit-save');
+    const overridesInput = document.getElementById('task-import-overrides');
+    const systemStaffNames = {{ staff_names_json|safe }};
 
-{% endblock 'content' %}
+    if (!importForm || !fileInput || !previewModal) return;
+    document.getElementById('edit_task_modal')?.addEventListener('close', () => {
+      window.previewImportTask = null;
+    });
+
+    const escapeHtml = (value) =>
+      String(value ?? '').replace(
+        /[&<>'"]/g,
+        (character) =>
+          ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;',
+          })[character],
+      );
+
+    const formatDate = (value, year) => {
+      if (value instanceof Date && !Number.isNaN(value.getTime())) {
+        return value.toLocaleDateString(undefined, {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+        });
+      }
+      const text = String(value ?? '').trim();
+      const scheduleText = text.replace(/\s*\([^)]*\)/, '');
+      const parsed = new Date(`${scheduleText} ${year || ''}`);
+      return Number.isNaN(parsed.getTime())
+        ? text
+        : parsed.toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+          });
+    };
+
+            const normalizeName = (value) => String(value ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+            const staffMatchesReference = (reference, staff) => {
+              const parts = normalizeName(reference).split(' ').filter(Boolean);
+              const lastName = parts[parts.length - 1];
+              const initial = parts[0]?.replace('.', '');
+              const staffFirstName = normalizeName(staff.full_name).split(' ')[0];
+              return normalizeName(staff.last_name) === lastName && (!parts[0].endsWith('.') || staffFirstName.startsWith(initial));
+            };
+            const staffByLastName = new Map();
+            systemStaffNames.forEach((staff) => {
+              const lastName = normalizeName(staff.last_name);
+              if (!staffByLastName.has(lastName)) staffByLastName.set(lastName, []);
+              staffByLastName.get(lastName).push(staff.full_name);
+            });
+            const roleLabel = (label) => ({ pj: 'Photojournalist', writer: 'Writer', layout: 'Layout Artist', artist: 'Artist' })[normalizeName(label)] || label;
+            const populateImportAssignments = (people) => {
+              const container = document.querySelector('#edit_task_modal .staff-role-container');
+              const firstRow = container?.querySelector('.staff-role-row');
+              if (!container || !firstRow) return;
+              container.querySelectorAll('.staff-role-row').forEach((row, index) => { if (index > 0) row.remove(); });
+              people.filter((person) => person !== 'None').forEach((person, index) => {
+                const match = person.match(/^(.*)\s*\(([^()]*)\)$/);
+                const staffReference = match ? match[1].trim() : person.trim();
+                const roleName = roleLabel(match ? match[2].trim() : '');
+                const row = index === 0 ? firstRow : firstRow.cloneNode(true);
+                if (index > 0) container.appendChild(row);
+                const roleSelect = row.querySelector('.role-select');
+                const roleOption = Array.from(roleSelect.options).find((option) => normalizeName(option.text) === normalizeName(roleName));
+                roleSelect.value = roleOption?.value || '';
+                const staffSelect = row.querySelector('.staff-select');
+                staffSelect.innerHTML = '<option value="">Select Staff</option>';
+                (staffData[roleSelect.value] || []).forEach((staff) => {
+                  const option = document.createElement('option');
+                  option.value = staff.id;
+                  option.textContent = staff.name;
+                  staffSelect.appendChild(option);
+                });
+                const referenceParts = normalizeName(staffReference).split(' ').filter(Boolean);
+                const lastName = referenceParts.pop();
+                const initial = referenceParts[0]?.replace('.', '');
+                const staffOption = Array.from(staffSelect.options).find((option) => {
+                  const staffParts = normalizeName(option.text).split(' ');
+                  return staffParts.pop() === lastName && (!initial || staffParts[0].startsWith(initial));
+                });
+                staffSelect.value = staffOption?.value || '';
+              });
+              updateRemoveButtons(container);
+            };
+
+    importForm.addEventListener('submit', async function (event) {
+      if (event.submitter?.id === 'task-import-confirm') return;
+      event.preventDefault();
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      try {
+        const workbook = XLSX.read(await file.arrayBuffer(), {
+          type: 'array',
+          cellDates: true,
+        });
+        const rows = XLSX.utils.sheet_to_json(
+          workbook.Sheets[workbook.SheetNames[0]],
+          { header: 1, defval: '' },
+        );
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        (sheet['!merges'] || []).forEach((merge) => {
+          const mergedValue = rows[merge.s.r]?.[merge.s.c] ?? '';
+          for (let rowIndex = merge.s.r; rowIndex <= merge.e.r; rowIndex += 1) {
+            if (!rows[rowIndex]) rows[rowIndex] = [];
+            for (let columnIndex = merge.s.c; columnIndex <= merge.e.c; columnIndex += 1) {
+              rows[rowIndex][columnIndex] = mergedValue;
+            }
+          }
+        });
+        const headerRowIndex = rows.findIndex((row) => {
+          const headers = row.map((cell) => String(cell).trim().toLowerCase());
+          return (headers.includes('schedule') && headers.includes('activities')) ||
+            (headers.includes('deadline') && headers.includes('to post/pubmats'));
+        });
+        const isTracker = headerRowIndex >= 0;
+        const yearMatch = file.name.match(/20\d{2}/);
+        const year = yearMatch ? yearMatch[0] : new Date().getFullYear();
+        let tasks = [];
+
+        if (isTracker && rows[headerRowIndex].some((cell) => String(cell).trim().toLowerCase() === 'to post/pubmats')) {
+          const headers = rows[headerRowIndex].map((cell) => String(cell).trim().toLowerCase());
+          const dateIndex = headers.indexOf('deadline');
+          const activityIndex = headers.indexOf('to post/pubmats');
+          const assignedIndex = headers.indexOf('assigned person:');
+          const fileLinkIndex = headers.indexOf('file link');
+          const roleRow = rows[headerRowIndex + 1] || [];
+          const roleColumns = {};
+          for (let columnIndex = Math.max(0, assignedIndex - 2); columnIndex < (fileLinkIndex >= 0 ? fileLinkIndex : roleRow.length); columnIndex += 1) {
+            if (roleRow[columnIndex]) roleColumns[columnIndex] = roleRow[columnIndex];
+          }
+          tasks = rows.slice(headerRowIndex + 2).map((row) => {
+            const assignments = Object.keys(roleColumns)
+              .filter((columnIndex) => row[columnIndex])
+              .map((columnIndex) => `${row[columnIndex]} (${roleColumns[columnIndex]})`);
+            return {
+              title: row[activityIndex],
+              people: assignments.length ? assignments.join(', ') : 'None',
+              description: '',
+              date: formatDate(row[dateIndex], year),
+              status: 'Pending'
+            };
+          }).filter((task) => task.title && task.date);
+        } else if (isTracker) {
+          const headers = rows[headerRowIndex].map((cell) =>
+            String(cell).trim().toLowerCase(),
+          );
+          const scheduleIndex = headers.indexOf('schedule');
+          const activityIndex = headers.indexOf('activities');
+          const assignedIndex = headers.indexOf('assigned person:');
+          const fileLinkIndex = headers.indexOf('file link');
+          const statusIndex = headers.indexOf('checklist');
+          const roleRow = rows[headerRowIndex + 1] || [];
+          const roleColumns = {};
+          const roleStartIndex = Math.max(0, assignedIndex - (isTracker && headers.includes('to post/pubmats') ? 2 : 1));
+          for (let columnIndex = roleStartIndex; columnIndex < (fileLinkIndex >= 0 ? fileLinkIndex : roleRow.length); columnIndex += 1) {
+            if (roleRow[columnIndex]) roleColumns[columnIndex] = roleRow[columnIndex];
+          }
+          tasks = rows
+            .slice(headerRowIndex + 2)
+            .map((row) => {
+              const assignments = Object.keys(roleColumns)
+                .filter((columnIndex) => row[columnIndex])
+                .map((columnIndex) => `${row[columnIndex]} (${roleColumns[columnIndex]})`);
+              return {
+              title: row[activityIndex],
+              people: assignments.length ? assignments.join(', ') : 'None',
+              description: '',
+              date: formatDate(row[scheduleIndex], year),
+              status: row[statusIndex] || 'Pending',
+              };
+            })
+            .filter((task) => task.title && task.date);
+        } else {
+          const headers = rows[0].map((cell) =>
+            String(cell).trim().toLowerCase(),
+          );
+          const titleIndex = headers.indexOf('title');
+          const dateIndex = headers.indexOf('deadline');
+          const peopleIndex = headers.indexOf('assigned people');
+          const statusIndex = headers.indexOf('status');
+          if (titleIndex < 0 || dateIndex < 0)
+            throw new Error('The sheet needs title and deadline columns.');
+          tasks = rows
+            .slice(1)
+            .map((row) => ({
+              title: row[titleIndex],
+              people: peopleIndex >= 0 ? row[peopleIndex] || 'None' : 'None',
+              description: '',
+              date: formatDate(row[dateIndex]),
+              status: row[statusIndex] || 'Pending',
+            }))
+            .filter((task) => task.title && task.date);
+        }
+
+        if (!tasks.length) throw new Error('No importable tasks were found.');
+        tasks.forEach((task, index) => { task.importIndex = index; });
+        let selectedTask = null;
+        const renderPreview = () => {
+          const missingStaff = new Set();
+          previewRows.innerHTML = tasks
+          .map((task) => {
+            const people = String(task.people).split(',').map((person) => person.trim()).filter(Boolean);
+            const staffReference = (person) => person.replace(/\s*\([^)]*\)\s*$/, '');
+            const missing = people.filter((person) => person !== 'None' && !systemStaffNames.some((staff) => staffMatchesReference(staffReference(person), staff)));
+            const ambiguous = people.filter((person) => systemStaffNames.filter((staff) => staffMatchesReference(staffReference(person), staff)).length > 1);
+            missing.forEach((person) => missingStaff.add(person));
+            ambiguous.forEach((person) => missingStaff.add(`${person} (duplicate last name)`));
+            const staffCheck = people.length === 0 || (people.length === 1 && people[0] === 'None')
+              ? '<span class="opacity-60">None listed</span>'
+              : missing.length || ambiguous.length
+                ? `<span class="text-error font-semibold">${missing.length ? `Missing surname: ${escapeHtml(missing.join(', '))}` : ''}${ambiguous.length ? ` Duplicate surname: ${escapeHtml(ambiguous.join(', '))}` : ''}</span>`
+                : '<span class="text-success font-semibold">All found</span>';
+            return `<tr data-import-index="${task.importIndex}" class="cursor-pointer hover"><td class="font-medium">${escapeHtml(task.title)}</td><td>${escapeHtml(task.people)}</td><td>${staffCheck}</td><td>${escapeHtml(task.date)}</td><td>${escapeHtml(task.status)}</td></tr>`;
+          })
+          .join('');
+          confirmButton.disabled = missingStaff.size > 0;
+          previewSummary.textContent = missingStaff.size
+          ? `Cannot import yet. These staff members are not in the system: ${Array.from(missingStaff).join(', ')}`
+          : `${tasks.length} task${tasks.length === 1 ? '' : 's'} ready to import and sync.`;
+          previewRows.querySelectorAll('tr[data-import-index]').forEach((row) => row.addEventListener('click', () => {
+            selectedTask = tasks[Number(row.dataset.importIndex)];
+            window.previewImportTask = selectedTask;
+            document.querySelector('#edit_task_modal [name="title"]').value = selectedTask.title;
+            const previewDate = new Date(selectedTask.date);
+            document.querySelector('#edit_task_modal [name="deadline"]').value = Number.isNaN(previewDate.getTime()) ? selectedTask.date : previewDate.toISOString().slice(0, 10);
+            document.querySelector('#edit_task_modal [name="description"]').value = selectedTask.description || '';
+            document.querySelector('#edit_task_modal [name="task_type"]').value = 'OBS';
+            document.querySelector('#edit_task_modal [name="status"]').value = String(selectedTask.status).toUpperCase() === 'POSTED' ? 'POSTED' : 'PENDING';
+            populateImportAssignments(String(selectedTask.people).split(',').map((person) => person.trim()).filter(Boolean));
+            document.getElementById('edit_task_modal').showModal();
+          }));
+        };
+        renderPreview();
+        window.addEventListener('preview-task-updated', () => {
+          overridesInput.value = JSON.stringify(tasks.map(({ importIndex, title, date, people, status, description }) => ({ importIndex, title, date, people, status, description })));
+          renderPreview();
+        });
+        editSave.addEventListener('click', () => {
+          if (!selectedTask) return;
+          selectedTask.title = editTitle.value.trim();
+          selectedTask.date = editDate.value;
+          selectedTask.people = editPeople.value.trim() || 'None';
+          selectedTask.status = editStatus.value;
+          overridesInput.value = JSON.stringify(tasks.map(({ importIndex, title, date, people, status }) => ({ importIndex, title, date, people, status })));
+          renderPreview();
+        });
+        previewModal.showModal();
+      } catch (error) {
+        alert(`Could not preview this workbook: ${error.message}`);
+      }
+    });
+
+    confirmButton.addEventListener('click', () => importForm.submit());
+    cancelButton.addEventListener('click', () => previewModal.close());
+  });
+</script>
+
+{% endblock content %}

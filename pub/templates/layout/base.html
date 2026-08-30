@@ -9,14 +9,14 @@
     <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="{% static 'css/multi-select-tag.css' %}">
 
-    {% block 'page_head' %}{% endblock 'page_head' %}
+    {% block page_head %}{% endblock page_head %}
 
     <link rel="apple-touch-icon" sizes="180x180" href="{% static "apple-touch-icon.png" %}">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static "favicon-32x32.png" %}">
     <link rel="icon" type="image/png" sizes="16x16" href="{% static "favicon-16x16.png" %}">
-    <link rel="manifest" href="/site.webmanifest">
+    <link rel="manifest" href="{% static 'site.webmanifest' %}">
 
-    <title>{% block 'title' %} {% endblock 'title' %}</title>
+    <title>{% block title %} {% endblock title %}</title>
     <script>
     // Initialize theme from localStorage
     const savedTheme = localStorage.getItem('theme') || 'bumblebee';
@@ -24,7 +24,7 @@
     </script>
 </head>
 <body >
-    {% block 'sidebar' %} 
+    {% block sidebar %}
     <!-- Mobile sidebar open button -->
     <button id="sidebar-open-btn" class="fixed top-4 left-4 z-40 p-2 rounded-md bg-gray-800 text-white md:hidden focus:outline-none focus:ring-2 focus:ring-gray-400">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -63,13 +63,13 @@
                 </script>
             {% endif %}
             <div class="flex flex-col flex-1">
-                {% block 'content' %}{% endblock 'content' %}
+                {% block content %}{% endblock content %}
             </div>
         </div>
     </div>
-    {% endblock 'sidebar' %}
+    {% endblock sidebar %}
 
-    {% block 'login' %}{% endblock 'login' %}
+    {% block login %}{% endblock login %}
 
     <script>
     // Sidebar toggle logic
@@ -84,11 +84,11 @@
         sidebar.classList.add('-translate-x-full');
     }
 
-    openBtn.addEventListener('click', openSidebar);
+    if (openBtn && sidebar) openBtn.addEventListener('click', openSidebar);
     if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
 
     // Optional: close sidebar when clicking outside on mobile
-    sidebar.addEventListener('click', function(e) {
+    if (sidebar) sidebar.addEventListener('click', function(e) {
         if (e.target === sidebar && window.innerWidth < 768) {
             closeSidebar();
         }
@@ -97,6 +97,6 @@
     
     {% comment %} multiselect for roles {% endcomment %}
     <script src="{% static 'js/multidropdown.js' %}"></script>
-    {% block 'page_scripts' %}{% endblock 'page_scripts' %}
+    {% block page_scripts %}{% endblock page_scripts %}
 </body>
 </html>
